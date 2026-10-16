@@ -1,0 +1,23 @@
+@import "../../ui/theme.css";
+
+/* Reset everything the page might leak in, then set our own base. Custom properties survive `all`. */
+:host {
+  all: initial;
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  z-index: 2147483646;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text);
+  direction: ltr;
+  text-align: start;
+  -webkit-font-smoothing: antialiased;
+}
+
+.siyaq { color-scheme: dark; }
+.siyaq.theme-light { color-scheme: light; }

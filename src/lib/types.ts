@@ -121,7 +121,7 @@ export interface UserError {
 }
 
 export type LookupResponse =
-  | { ok: true; card: Card; cached: boolean }
+  | { ok: true; card: Card; cached: boolean; id: string }
   | { ok: false; error: UserError };
 
 export type SummaryResponse =

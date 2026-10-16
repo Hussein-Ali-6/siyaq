@@ -86,3 +86,10 @@ describe('blockText', () => {
     expect(blockText(document.getElementById('p')!)).toBe('Hello big world');
   });
 });
+
+describe('blockText with line breaks', () => {
+  it('treats <br> as a space so sentences stay separated', () => {
+    document.body.innerHTML = '<p id="p">making it.<br><br>Partly my goal</p>';
+    expect(blockText(document.getElementById('p')!)).toBe('making it. Partly my goal');
+  });
+});

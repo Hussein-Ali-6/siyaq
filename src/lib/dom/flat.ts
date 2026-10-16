@@ -1,11 +1,13 @@
 import type { Span } from '@/lib/types';
 
+/** A text node, or a <br> element that contributes a single "\n". */
 export interface FlatNode {
-  node: Text;
+  node: Text | Element;
   start: number;
+  length: number;
 }
 
-/** Every text node under `root` in document order, concatenated, with each node's start offset. */
+/** Every text node (and <br>) under `root` in document order, concatenated, with start offsets. */
 export interface FlatModel {
   root: Node;
   text: string;
@@ -24,16 +26,23 @@ export function buildFlatModel(root: Node): FlatModel {
   const walker = documentOf(root).createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, {
     acceptNode(node) {
       if (node.nodeType === Node.ELEMENT_NODE) {
-        return SKIP_TAGS.has((node as Element).tagName) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_SKIP;
+        const tag = (node as Element).tagName;
+        if (SKIP_TAGS.has(tag)) return NodeFilter.FILTER_REJECT;
+        return tag === 'BR' ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
       }
       return NodeFilter.FILTER_ACCEPT;
     },
   });
   let n: Node | null;
   while ((n = walker.nextNode())) {
-    const t = n as Text;
-    nodes.push({ node: t, start: text.length });
-    text += t.data;
+    if (n.nodeType === Node.ELEMENT_NODE) {
+      nodes.push({ node: n as Element, start: text.length, length: 1 });
+      text += '\n';
+    } else {
+      const t = n as Text;
+      nodes.push({ node: t, start: text.length, length: t.data.length });
+      text += t.data;
+    }
   }
   return { root, text, nodes };
 }
@@ -42,7 +51,7 @@ export function buildFlatModel(root: Node): FlatModel {
 export function pointToOffset(model: FlatModel, container: Node, offset: number): number {
   if (container.nodeType === Node.TEXT_NODE) {
     const entry = model.nodes.find((e) => e.node === container);
-    if (entry) return entry.start + Math.min(offset, entry.node.data.length);
+    if (entry) return entry.start + Math.min(offset, entry.length);
   }
   const probe = documentOf(model.root).createRange();
   try {
@@ -67,18 +76,31 @@ export function rangeToSpan(model: FlatModel, range: Range): Span {
   return { start: Math.min(a, b), end: Math.max(a, b) };
 }
 
-function offsetToPoint(model: FlatModel, offset: number, edge: 'start' | 'end'): { node: Text; offset: number } | null {
+interface DomPoint {
+  node: Node;
+  offset: number;
+}
+
+/** A DOM point for an offset inside `entry`; a <br> maps to the position before or after it. */
+function pointIn(entry: FlatNode, offset: number): DomPoint | null {
+  const local = offset - entry.start;
+  if (entry.node.nodeType === Node.TEXT_NODE) return { node: entry.node, offset: local };
+  const parent = entry.node.parentNode;
+  if (!parent) return null;
+  const index = Array.prototype.indexOf.call(parent.childNodes, entry.node);
+  return { node: parent, offset: local > 0 ? index + 1 : index };
+}
+
+function offsetToPoint(model: FlatModel, offset: number, edge: 'start' | 'end'): DomPoint | null {
   if (edge === 'start') {
     for (const entry of model.nodes) {
-      const len = entry.node.data.length;
-      if (entry.start + len > offset && offset >= entry.start) return { node: entry.node, offset: offset - entry.start };
+      if (entry.start + entry.length > offset && offset >= entry.start) return pointIn(entry, offset);
     }
     return null;
   }
   for (let k = model.nodes.length - 1; k >= 0; k--) {
     const entry = model.nodes[k]!;
-    const len = entry.node.data.length;
-    if (entry.start < offset && offset <= entry.start + len) return { node: entry.node, offset: offset - entry.start };
+    if (entry.start < offset && offset <= entry.start + entry.length) return pointIn(entry, offset);
   }
   return null;
 }

@@ -7,6 +7,7 @@ import {
   selectedTokenIndices,
   sentenceSegments,
   sentenceWindow,
+  sentenceWindowByWords,
   surfaceForm,
   tokenizeWords,
   validateIndices,
@@ -197,5 +198,33 @@ describe('surfaceForm', () => {
 
   it('marks gaps with an ellipsis', () => {
     expect(surfaceForm(passage, [2, 5])).toBe('turned … down');
+  });
+});
+
+describe('sentenceWindowByWords', () => {
+  const sentences = Array.from({ length: 40 }, (_, i) => `Sentence number ${i} has exactly seven words.`);
+  const text = sentences.join(' ');
+
+  it('grows around the selection until the minimum, alternating after then before', () => {
+    const s = text.indexOf('Sentence number 20');
+    const span = sentenceWindowByWords(text, { start: s, end: s + 8 }, { min: 50, max: 100 });
+    const chunk = text.slice(span.start, span.end);
+    expect(chunk).toContain('Sentence number 20');
+    expect(chunk.startsWith('Sentence number 17')).toBe(true);
+    expect(chunk.endsWith('Sentence number 24 has exactly seven words.')).toBe(true);
+  });
+
+  it('never grows past the maximum', () => {
+    const s = text.indexOf('Sentence number 20');
+    const span = sentenceWindowByWords(text, { start: s, end: s + 8 }, { min: 150, max: 160 });
+    const words = text.slice(span.start, span.end).split(' ').length;
+    expect(words).toBeLessThanOrEqual(160);
+    expect(words).toBeGreaterThanOrEqual(150);
+  });
+
+  it('keeps the whole selection sentence even when it alone exceeds the maximum', () => {
+    const long = Array.from({ length: 50 }, (_, i) => `w${i}`).join(' ') + '.';
+    const span = sentenceWindowByWords(long, { start: 0, end: 2 }, { min: 10, max: 20 });
+    expect(span).toEqual({ start: 0, end: long.length });
   });
 });

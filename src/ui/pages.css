@@ -1,0 +1,9 @@
+@import "./theme.css";
+
+html, body { margin: 0; }
+body { background: var(--color-bg); color: var(--color-text); font-family: var(--font-sans); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+body.theme-light { background: var(--color-bg); color: var(--color-text); }
+
+.btn { @apply inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-[13px] font-medium text-text hover:border-amber disabled:opacity-50; }
+.btn-primary { @apply inline-flex items-center gap-1.5 rounded-lg bg-amber px-3 py-1.5 text-[13px] font-semibold text-bg hover:bg-amber-strong disabled:opacity-50; }
+.input { @apply w-full rounded-lg border border-border bg-surface px-3 py-2 text-[14px] text-text outline-none placeholder:text-faint focus:border-amber; }

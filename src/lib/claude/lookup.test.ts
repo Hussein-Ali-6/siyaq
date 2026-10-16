@@ -37,6 +37,7 @@ function fakeDeps(answers: Array<unknown | Error>): LookupDeps & { calls: number
         if (next instanceof Error) throw next;
         return { json: next, stopReason: 'end_turn' };
       },
+      async ping() {},
     },
     cache: {
       get: async (key: string) => store.get(key) ?? null,

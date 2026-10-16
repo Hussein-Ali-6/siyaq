@@ -41,6 +41,8 @@ export interface StructuredResult {
 
 export interface ClaudeClient {
   callStructured(call: StructuredCall): Promise<StructuredResult>;
+  /** A minimal request used to check that a key works. Throws a ClaudeError otherwise. */
+  ping(): Promise<void>;
 }
 
 export function toClaudeError(err: unknown): ClaudeError {
@@ -111,6 +113,19 @@ export function createClaudeClient(apiKey: string): ClaudeClient {
         throw new ClaudeError('invalid_answer', 'the answer was not valid JSON');
       }
       return { json, stopReason: response.stop_reason };
+    },
+
+    async ping() {
+      try {
+        await client.messages.create({
+          model: MODEL,
+          max_tokens: 8,
+          output_config: { effort: 'low' },
+          messages: [{ role: 'user', content: 'Reply with the single word: ok' }],
+        });
+      } catch (err) {
+        throw toClaudeError(err);
+      }
     },
   };
 }

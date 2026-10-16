@@ -66,7 +66,7 @@ export async function performLookup(req: LookupRequest, deps: LookupDeps): Promi
   const cached = await deps.cache.get(key);
   if (cached) {
     log.info('lookup_cached', { kind: req.kind });
-    return { ok: true, card: cached, cached: true };
+    return { ok: true, card: cached, cached: true, id: key };
   }
 
   const summary = await deps.getSummary(req.page.url);
@@ -104,7 +104,7 @@ export async function performLookup(req: LookupRequest, deps: LookupDeps): Promi
     if (validated.ok) {
       log.info('lookup_ok', { kind: req.kind, attempt, ms: Date.now() - started });
       await deps.cache.set(key, validated.card);
-      return { ok: true, card: validated.card, cached: false };
+      return { ok: true, card: validated.card, cached: false, id: key };
     }
     log.warn('lookup_answer_invalid', { kind: req.kind, attempt });
     hint = validated.reason;

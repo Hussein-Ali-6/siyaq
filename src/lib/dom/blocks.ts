@@ -34,6 +34,10 @@ function textOf(el: Element, stopAtBlocks: boolean): string {
       s += (child as Text).data;
     } else if (child.nodeType === Node.ELEMENT_NODE) {
       const c = child as Element;
+      if (c.tagName === 'BR') {
+        s += '\n';
+        continue;
+      }
       if (SKIP_TAGS.has(c.tagName) || (stopAtBlocks && isBlock(c))) continue;
       s += textOf(c, stopAtBlocks);
       if (!stopAtBlocks && isBlock(c)) s += ' ';

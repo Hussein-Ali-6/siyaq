@@ -56,3 +56,12 @@ describe('rangeToSpan / spanToRange', () => {
     expect(spanToRange(m, { start: 4, end: 9 })).toBeNull();
   });
 });
+
+describe('line breaks', () => {
+  it('represents <br> as a newline that maps back to a DOM position', () => {
+    document.body.innerHTML = '<p id="p">making it.<br><br>Partly my goal</p>';
+    const m = buildFlatModel(document.getElementById('p')!);
+    expect(m.text).toBe('making it.\n\nPartly my goal');
+    expect(spanToRange(m, { start: 12, end: 18 })?.toString()).toBe('Partly');
+  });
+});

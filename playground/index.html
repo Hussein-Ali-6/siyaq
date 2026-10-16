@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Siyaq playground</title>
+    <style>
+      body { margin: 0; font-family: Georgia, serif; background: #f4f1ea; color: #222; }
+      .page { max-width: 760px; margin: 0 auto; padding: 32px 24px 1200px; line-height: 1.7; font-size: 18px; }
+      h1 { font-size: 34px; }
+      body.dark { background: #0f0f12; color: #ddd; }
+      .toolbar { position: fixed; top: 8px; right: 8px; display: flex; flex-wrap: wrap; gap: 6px; font: 13px system-ui; z-index: 10; max-width: 420px; justify-content: flex-end; }
+      .toolbar button { padding: 4px 10px; }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar" id="toolbar"></div>
+    <div class="page">
+      <h1>The board turned the offer down</h1>
+      <p id="p1">The board met on Monday. After a short debate it <span id="target">turned</span> the offer down. Nobody was surprised, least of all the founders, who had spent the summer burning through their funding and spilling the beans to half the office.</p>
+      <p id="p2">The deal fell through at the last minute, and the investors walked away with nothing. Notwithstanding the foregoing, the licensee shall indemnify the licensor against any claims by others arising from its use of the software.</p>
+      <p id="p3">Heavy rain closed the road for two days, and most people decided to stay home. Two cops stood outside; nobody wanted to go in.</p>
+    </div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>

@@ -1,3 +1,4 @@
+import { countWords } from '@/lib/text/words';
 import type { Passage, Segment, Span, Token } from '@/lib/types';
 
 const sentenceSegmenter = new Intl.Segmenter('en', { granularity: 'sentence' });
@@ -100,6 +101,46 @@ export function buildWordPassage(
     sentence: { start: sentence.start - window.start, end: sentence.end - window.start },
   };
   return { passage, windowStart: window.start, selectedIndices: selectedTokenIndices(tokens, localSel) };
+}
+
+/**
+ * A window of whole sentences around `sel` holding at least `min` words without going past `max`
+ * (the selection's own sentence is always kept). Grows after the selection first, then before.
+ */
+export function sentenceWindowByWords(text: string, sel: Span, limits: { min: number; max: number }): Span {
+  const sentences = segmentSentences(text);
+  if (sentences.length === 0) return { start: 0, end: text.length };
+  let k = sentences.findIndex((s) => sel.start < s.end);
+  if (k === -1) k = sentences.length - 1;
+  const counts = sentences.map((s) => countWords(text.slice(s.start, s.end)));
+  let lo = k;
+  let hi = k;
+  let words = counts[k]!;
+  let afterDone = false;
+  let beforeDone = false;
+  let side: 'after' | 'before' = 'after';
+  while (words < limits.min && !(afterDone && beforeDone)) {
+    if (side === 'after') {
+      side = 'before';
+      if (afterDone) continue;
+      if (hi + 1 >= sentences.length || words + counts[hi + 1]! > limits.max) {
+        afterDone = true;
+        continue;
+      }
+      hi++;
+      words += counts[hi]!;
+    } else {
+      side = 'after';
+      if (beforeDone) continue;
+      if (lo - 1 < 0 || words + counts[lo - 1]! > limits.max) {
+        beforeDone = true;
+        continue;
+      }
+      lo--;
+      words += counts[lo]!;
+    }
+  }
+  return { start: sentences[lo]!.start, end: sentences[hi]!.end };
 }
 
 export type IndexCheck = { ok: true; indices: number[] } | { ok: false; reason: string };

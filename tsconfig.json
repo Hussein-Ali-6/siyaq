@@ -7,7 +7,7 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "skipLibCheck": true,
-    "types": ["chrome"]
+    "types": ["chrome", "node"]
   },
   "include": ["src", "playground", "scripts", "wxt.config.ts", "vitest.config.ts", ".wxt/wxt.d.ts"]
 }
