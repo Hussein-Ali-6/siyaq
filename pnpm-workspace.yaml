@@ -1,2 +1,4 @@
 allowBuilds:
-  esbuild: set this to true or false
+  esbuild: true
+overrides:
+  '@vitejs/plugin-react': ^5.0.0
