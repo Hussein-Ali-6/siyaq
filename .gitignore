@@ -1,0 +1,10 @@
+node_modules/
+.output/
+.wxt/
+stats.html
+stats-*.json
+.DS_Store
+.env
+.env.*
+playground/dist/
+scripts/eval/out/
