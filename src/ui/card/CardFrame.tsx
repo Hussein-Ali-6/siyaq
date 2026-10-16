@@ -4,6 +4,7 @@ import { DictionaryView } from './DictionaryView';
 import { ErrorView } from './ErrorView';
 import { LoadingView } from './LoadingView';
 import { SummaryView } from './SummaryView';
+import { TranslationView } from './TranslationView';
 import type { CardActions, CardState, PageRect } from './state';
 
 const WIDTH = 400;
@@ -118,8 +119,6 @@ export function CardFrame({ state, actions }: { state: CardState; actions: CardA
     </div>
   );
 }
-
-import { TranslationView } from './TranslationView';
 
 function TranslationViewLazy({ state, actions }: { state: CardState; actions: CardActions }) {
   const entry = state.card!.stack[state.card!.stack.length - 1]!;

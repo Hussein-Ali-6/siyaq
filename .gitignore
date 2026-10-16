@@ -8,3 +8,4 @@ stats-*.json
 .env.*
 playground/dist/
 scripts/eval/out/
+scripts/eval/.cache/

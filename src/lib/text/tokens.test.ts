@@ -48,6 +48,11 @@ describe('tokenizeWords', () => {
     expect(tokens[3]).toEqual({ i: 4, t: 'down', start: 14, end: 18 });
   });
 
+  it('ignores bracketed footnote numbers so they are not numbered as words', () => {
+    const tokens = tokenizeWords('Great work has a tincture[2] of strangeness. [3] Four steps.');
+    expect(tokens.map((t) => t.t)).toEqual(['Great', 'work', 'has', 'a', 'tincture', 'of', 'strangeness', 'Four', 'steps']);
+  });
+
   it('supports a base offset and a starting index', () => {
     const tokens = tokenizeWords('ab cd', 10, 5);
     expect(tokens).toEqual([

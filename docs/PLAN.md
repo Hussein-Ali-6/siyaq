@@ -103,6 +103,20 @@ with empty lists). API schema has no enums/min/max; `validate.ts` enforces: Arab
 examples, ≤2 notes, ≤6 combinations, ≤4 other meanings, ≤3 key expressions (trim, not reject), indices
 unique, in range and overlapping the selection (reject → retry once with the reason appended).
 
+## Learned while building (2026-10-16)
+
+- Pages like paulgraham.com separate paragraphs with `<br><br>` inside one block. The flat text model
+  now treats `<br>` as a newline (mapped back to a DOM position), block text turns it into a space, and
+  when the containing block is still over 400 words the "paragraph" becomes a window of whole sentences
+  around the selection (150–400 words). Readability output goes through the same break-preserving walk.
+- Footnote markers like `[2]` on Wikipedia and essays are skipped by the tokenizer so they cannot be
+  mistaken for the `[i]word` numbering.
+- Tailwind v4 only scans from the Vite root; `@source "../"` in the theme makes the playground and the
+  extension generate the same utilities.
+- `@vitejs/plugin-react` 6 needs Vite 8; the project pins v5 through a pnpm override with Vite 7.
+- The dry-run evaluation (`pnpm eval`) builds all 33 requests on the real pages; the live run needs an
+  API key and was not run in the build session.
+
 ## Build order
 
 1. Scaffold (pnpm, WXT, React, Tailwind, vitest) and verify a build.

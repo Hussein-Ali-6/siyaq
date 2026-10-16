@@ -35,12 +35,21 @@ export function segmentSentences(text: string): Span[] {
   return spans;
 }
 
-/** Word-like tokens of `text`, numbered from `firstIndex`, with offsets shifted by `base`. */
+/** A footnote or citation marker such as "[2]": a number wrapped in square brackets. */
+function isFootnoteMarker(text: string, seg: Intl.SegmentData): boolean {
+  if (!/^\d+$/.test(seg.segment)) return false;
+  return text[seg.index - 1] === '[' && text[seg.index + seg.segment.length] === ']';
+}
+
+/**
+ * Word-like tokens of `text`, numbered from `firstIndex`, with offsets shifted by `base`.
+ * Footnote markers like "[2]" are skipped so they cannot be confused with the "[i]word" format.
+ */
 export function tokenizeWords(text: string, base = 0, firstIndex = 1): Token[] {
   const tokens: Token[] = [];
   let i = firstIndex;
   for (const seg of wordSegmenter.segment(text)) {
-    if (!seg.isWordLike) continue;
+    if (!seg.isWordLike || isFootnoteMarker(text, seg)) continue;
     tokens.push({ i: i++, t: seg.segment, start: base + seg.index, end: base + seg.index + seg.segment.length });
   }
   return tokens;
