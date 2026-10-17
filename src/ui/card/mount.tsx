@@ -1,5 +1,6 @@
 import { createRoot, type Root } from 'react-dom/client';
 import { CardApp } from './CardApp';
+import { withShadowPropertyDefaults } from './shadowCss';
 import type { CardActions, CardState } from './state';
 
 export interface CardUi {
@@ -20,7 +21,7 @@ export function createCardUi(doc: Document, cssText: string, hostTag: string): C
   const host = doc.createElement(hostTag);
   const shadow = host.attachShadow({ mode: 'open' });
   const sheet = new CSSStyleSheet();
-  sheet.replaceSync(cssText);
+  sheet.replaceSync(withShadowPropertyDefaults(cssText));
   shadow.adoptedStyleSheets = [sheet];
   const mount = doc.createElement('div');
   shadow.append(mount);
