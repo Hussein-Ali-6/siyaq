@@ -19,6 +19,7 @@ export const DICTIONARY_SCHEMA: JsonSchema = object({
   partOfSpeech: str,
   meaning: str,
   arabic: str,
+  arabicMeaning: str,
   notes: strList,
   sentenceArabic: str,
   examples: strList,

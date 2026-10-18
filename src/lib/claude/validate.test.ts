@@ -11,6 +11,7 @@ const good = {
   unitIndices: [3, 6],
   meaning: 'To refuse an offer or request.',
   arabic: 'رفض',
+  arabicMeaning: 'أن ترفض عرضًا أو طلبًا قُدِّم إليك.',
   notes: [],
   sentenceArabic: 'رفضوا العرض.',
   examples: ['She turned down the job.', 'He turned the invitation down.'],
@@ -80,10 +81,25 @@ describe('validateDictionary', () => {
     expect(validateDictionary('nope', passage, [3]).ok).toBe(false);
   });
 
-  it('drops combinations when the headword has more than one word', () => {
+  it('keeps combinations the model gives for a multi-word headword', () => {
     const r = validateDictionary({ ...good, headword: 'chilling effect', combinations: ['have a chilling effect'] }, passage, [3]);
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.card.combinations).toEqual([]);
+    if (r.ok) expect(r.card.combinations).toEqual(['have a chilling effect']);
+  });
+
+  it('accepts an empty Arabic equivalent when the Arabic explanation is present', () => {
+    const r = validateDictionary({ ...good, arabic: '' }, passage, [3]);
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.card.arabic).toBe('');
+      expect(r.card.arabicMeaning).toBe('أن ترفض عرضًا أو طلبًا قُدِّم إليك.');
+    }
+  });
+
+  it('rejects a missing or non-Arabic Arabic explanation', () => {
+    const { arabicMeaning: _a, ...noMeaning } = good;
+    expect(validateDictionary(noMeaning, passage, [3]).ok).toBe(false);
+    expect(validateDictionary({ ...good, arabicMeaning: 'to refuse' }, passage, [3]).ok).toBe(false);
   });
 
   it('keeps combinations for a single-word headword', () => {

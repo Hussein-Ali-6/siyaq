@@ -10,6 +10,7 @@ const dictionary: DictionaryCard = {
   unitIndices: [11, 14],
   meaning: 'to refuse an offer, request or proposal',
   arabic: 'رفض',
+  arabicMeaning: 'أن ترفض عرضًا أو طلبًا أو اقتراحًا قُدِّم إليك.',
   notes: ['Informal in speech; "decline" is the formal equivalent.'],
   sentenceArabic: 'بعد نقاش قصير، رفض المجلس العرض.',
   examples: ['She turned down the job because the salary was too low.', 'They turned our request down without any explanation.'],

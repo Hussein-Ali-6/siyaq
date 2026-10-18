@@ -57,12 +57,7 @@ export function App() {
   return (
     <div className="flex w-[340px] flex-col gap-4 p-4">
       <header className="flex items-center justify-between">
-        <div className="flex items-baseline gap-2">
-          <span className="font-arabic text-[22px] font-bold leading-none text-amber" aria-hidden="true">
-            سياق
-          </span>
-          <h1 className="text-[15px] font-semibold">Siyaq</h1>
-        </div>
+        <h1 className="text-[18px] font-bold leading-none text-amber">Siyaq</h1>
         <button type="button" onClick={openOptions} className="text-[12px] text-muted hover:text-text">
           Settings
         </button>

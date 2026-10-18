@@ -16,6 +16,7 @@ function wordItem(id: string, headword: string, arabic: string): Omit<SavedItem,
       unitIndices: [1],
       meaning: `to ${headword} something`,
       arabic,
+      arabicMeaning: `شرح ${arabic}`,
       notes: [],
       sentenceArabic: 'جملة',
       examples: ['a', 'b'],
@@ -76,6 +77,10 @@ describe('searchSaved', () => {
     expect(searchSaved(items, 'احمد').map((i) => i.id)).toEqual(['c']);
   });
 
+  it('matches the Arabic explanation', () => {
+    expect(searchSaved(items, 'شرح رفض').map((i) => i.id)).toEqual(['a']);
+  });
+
   it('returns everything for a blank query', () => {
     expect(searchSaved(items, '  ')).toHaveLength(3);
   });
@@ -88,7 +93,8 @@ describe('export', () => {
     ];
     const csv = toCsv(items);
     const lines = csv.split('\n');
-    expect(lines[0]).toBe('kind,headword,arabic,meaning,sentence,translation,page,url,saved');
+    expect(lines[0]).toBe('kind,headword,arabic,arabic_meaning,meaning,sentence,translation,page,url,saved');
+    expect(lines[1]).toContain('شرح قال');
     expect(lines[1]).toContain('"say ""hi"""');
     expect(lines[1]).toContain('2026-10-16');
     expect(JSON.parse(toJson(items))).toHaveLength(1);

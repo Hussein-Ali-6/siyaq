@@ -19,6 +19,7 @@ const goodAnswer = {
   unitIndices: [3, 6],
   meaning: 'To refuse an offer or request.',
   arabic: 'رفض',
+  arabicMeaning: 'أن ترفض عرضًا أو طلبًا.',
   notes: [],
   sentenceArabic: 'رفضوا العرض.',
   examples: ['She turned down the job.', 'He turned the invitation down.'],

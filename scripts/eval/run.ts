@@ -121,10 +121,11 @@ function flags(sel: Selection, card: Card): string[] {
     if (e.combos === 'none' && card.combinations.length) out.push(`unexpected combinations: ${card.combinations.join(', ')}`);
     for (const n of card.notes) if (FORBIDDEN_NOTE.test(n)) out.push(`forbidden note topic: ${n}`);
     for (const m of card.otherMeanings) if (/[()]/.test(m.arabic)) out.push(`other meaning arabic has brackets: ${m.arabic}`);
-    if (/\s/.test(card.headword) && card.combinations.length) out.push('combinations on a multi-word headword');
     if (card.examples.length !== 2) out.push(`examples: ${card.examples.length}`);
     if (/^(here|in this sentence)/i.test(card.meaning)) out.push('meaning retells the sentence');
-    if (/[()]/.test(card.arabic) || words(card.arabic) > 6) out.push(`arabic is not a short equivalent: ${card.arabic}`);
+    if (card.arabic && words(card.arabic) > 6) out.push(`arabic equivalent is long: ${card.arabic}`);
+    if (!card.arabicMeaning) out.push('missing Arabic explanation');
+    else if (words(card.arabicMeaning) > 30) out.push(`Arabic explanation is long (${words(card.arabicMeaning)} words)`);
   } else {
     if (e.plain === 'none' && card.plainEnglish) out.push(`unexpected plain English: ${card.plainEnglish}`);
     if (e.keyExpr === 'none' && card.keyExpressions.length) out.push(`unexpected key expressions: ${card.keyExpressions.map((k) => k.expression).join(', ')}`);
@@ -142,7 +143,8 @@ function cardMarkdown(card: Card): string {
     return [
       `**${card.headword}** · ${card.partOfSpeech} · unit ${JSON.stringify(card.unitIndices)}`,
       `- meaning: ${card.meaning}`,
-      `- arabic: ${card.arabic}`,
+      `- arabic: ${card.arabic || '(none)'}`,
+      `- arabic meaning: ${card.arabicMeaning ?? '(none)'}`,
       `- notes: ${card.notes.length ? card.notes.join(' | ') : '(none)'}`,
       `- sentence (ar): ${card.sentenceArabic}`,
       `- examples: ${card.examples.join(' | ')}`,

@@ -1,4 +1,4 @@
-# Siyaq (سياق) — context-aware dictionary & translation extension
+# Siyaq: context-aware dictionary and translation extension
 
 Plan written 2026-10-16 before implementation. Kept up to date as the architecture doc.
 
@@ -17,7 +17,7 @@ Plan written 2026-10-16 before implementation. Kept up to date as the architectu
 | Cache key | sha-256 of prompt version + kind + normalised URL + paragraph + selection + selected indices | Includes which occurrence was selected, so a word repeated in one paragraph with two senses is not confused. |
 | Key secrecy | Key lives in `chrome.storage.local`; only the service worker and the options page touch it; the content script never calls `chrome.storage`. The worker also tries `storage.local.setAccessLevel('TRUSTED_CONTEXTS')` (Chrome 130+) which locks content scripts out of local storage entirely | Belt and braces. |
 | Logging | `log.ts` accepts an event code and numeric/boolean fields only | Page text and answers can never reach the console. |
-| Name | "Siyaq" (سياق = context) | Easy to rename later in `wxt.config.ts`. |
+| Name | "Siyaq", written only in English in the UI and icons | Easy to rename later in `wxt.config.ts`. |
 
 ## Project structure
 

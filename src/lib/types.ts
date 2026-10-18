@@ -53,7 +53,10 @@ export interface DictionaryCard {
   /** Indices of the unit's words in the passage, verified against the request. */
   unitIndices: number[];
   meaning: string;
+  /** Closest Arabic equivalent; empty when none fits this sense well. */
   arabic: string;
+  /** A short Arabic sentence explaining this sense. Missing on cards saved before it existed. */
+  arabicMeaning?: string;
   notes: string[];
   sentenceArabic: string;
   examples: string[];

@@ -59,10 +59,8 @@ export function App() {
   return (
     <main className="mx-auto max-w-[640px] px-6 py-10">
       <header className="mb-8 flex items-baseline gap-3">
-        <span className="font-arabic text-[30px] font-bold leading-none text-amber" aria-hidden="true">
-          سياق
-        </span>
-        <h1 className="text-[22px] font-semibold">Siyaq settings</h1>
+        <span className="text-[26px] font-bold leading-none text-amber">Siyaq</span>
+        <h1 className="text-[22px] font-semibold">Settings</h1>
       </header>
 
       <section className="mb-8 space-y-3 rounded-2xl border border-border bg-surface p-5">

@@ -1,4 +1,4 @@
-# Siyaq (سياق)
+# Siyaq
 
 A Chrome extension that replaces Google Translate for reading English articles: a context-aware
 dictionary and translator for a native Arabic speaker (CEFR C1), powered by Claude. Select a word or
@@ -7,15 +7,16 @@ the article, not just the word.
 
 ## How it works
 
-- **Trigger.** Selecting text (a double-click selects a word) shows a small `س` icon next to the
-  selection. Nothing is sent anywhere until you click it. The icon never appears in inputs,
+- **Trigger.** Selecting text (a double-click selects a word) shows a small "Siyaq" button next to
+  the selection. Nothing is sent anywhere until you click it. The icon never appears in inputs,
   textareas or editable areas.
 - **Dictionary card** (up to 4 words): Claude decides the unit you mean (a word, or part of a phrasal
   verb, idiom or fixed expression, even split ones like "turned the offer down"), then shows the
   headword and part of speech, the meaning in this sentence in simple English plus the usual Arabic
   equivalent, "Good to know" notes only when needed, the sentence with the unit in bold, its Arabic
   translation blurred until clicked, two examples, "Common combinations" only for words with strong
-  partners, other meanings collapsed, and ★ Save.
+  partners, other meanings collapsed, and ★ Save. The Arabic comes as the closest equivalent when one
+  fits well, plus a short Arabic sentence explaining the sense, because one word rarely carries all of it.
 - **Translation card** (a sentence or longer): a natural Arabic translation, plainer English only when
   the original is hard, and at most three "Key expressions" that open their own dictionary card.
 - **Context sent with every request:** page title and site, the article summary once it exists, the

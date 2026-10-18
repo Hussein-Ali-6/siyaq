@@ -22,12 +22,23 @@ export function SentenceText({ segments, sentence }: { segments?: Segment[]; sen
   return <>{sentence}</>;
 }
 
+/** The Arabic equivalent, when one fits, above a short Arabic explanation of the sense. */
+export function ArabicMeaning({ card, className = '' }: { card: DictionaryCard; className?: string }) {
+  if (!card.arabic && !card.arabicMeaning) return null;
+  return (
+    <div dir="rtl" lang="ar" className={`arabic ${className}`}>
+      {card.arabic && <p className="text-[16px] font-semibold">{card.arabic}</p>}
+      {card.arabicMeaning && <p className="text-[14px] leading-relaxed">{card.arabicMeaning}</p>}
+    </div>
+  );
+}
+
 export function DictionaryView({ card, segments, sentence }: { card: DictionaryCard; segments?: Segment[]; sentence?: string }) {
   return (
     <div className="space-y-4">
       <div className="space-y-1.5">
         <p className="text-[15px] leading-snug">{card.meaning}</p>
-        <Arabic className="text-[16px] font-medium">{card.arabic}</Arabic>
+        <ArabicMeaning card={card} />
       </div>
 
       {card.notes.length > 0 && (

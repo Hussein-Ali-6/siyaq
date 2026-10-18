@@ -16,6 +16,8 @@ const trimmed = z.string().transform((s) => s.trim());
 const nonEmpty = trimmed.pipe(z.string().min(1));
 const arabic = nonEmpty.refine((s) => ARABIC.test(s), { message: 'must contain Arabic script' });
 const optionalString = trimmed.catch('');
+/** Empty is allowed; anything else must contain Arabic script. */
+const optionalArabic = trimmed.catch('').refine((s) => s === '' || ARABIC.test(s), { message: 'must be empty or contain Arabic script' });
 
 /** A list of strings, blanks removed, trimmed to `max`. Anything that is not a list becomes empty. */
 const stringList = (max: number) =>
@@ -36,7 +38,8 @@ const dictionarySchema = z.object({
   partOfSpeech: optionalString,
   unitIndices: z.unknown(),
   meaning: nonEmpty,
-  arabic,
+  arabic: optionalArabic,
+  arabicMeaning: arabic,
   notes: stringList(LIMITS.notes),
   sentenceArabic: arabic,
   examples: stringList(LIMITS.examples).refine((a) => a.length >= 1, { message: 'at least one example is required' }),
@@ -79,9 +82,7 @@ export function validateDictionary(raw: unknown, passage: Passage, selected: num
   const indices = validateIndices(parsed.data.unitIndices, passage, selected);
   if (!indices.ok) return { ok: false, reason: `unitIndices: ${indices.reason}` };
   const { unitIndices: _ignored, ...rest } = parsed.data;
-  // Phrasal verbs, idioms, fixed expressions and names never get "Common combinations".
-  const combinations = /\s/.test(rest.headword) ? [] : rest.combinations;
-  return { ok: true, card: { kind: 'word', ...rest, combinations, unitIndices: indices.indices } };
+  return { ok: true, card: { kind: 'word', ...rest, unitIndices: indices.indices } };
 }
 
 export function validateTranslation(raw: unknown, passage: Passage): Validation<TranslationCard> {

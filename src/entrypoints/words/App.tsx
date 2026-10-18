@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { browser } from 'wxt/browser';
 import { listSaved, removeSaved, searchSaved, toCsv, toJson } from '@/lib/storage/saved';
 import type { SavedItem } from '@/lib/types';
-import { SentenceText } from '@/ui/card/DictionaryView';
+import { ArabicMeaning, SentenceText } from '@/ui/card/DictionaryView';
 import { Arabic } from '@/ui/components/Arabic';
 import { ExternalIcon, TrashIcon } from '@/ui/components/icons';
 import { useTheme } from '@/ui/components/useTheme';
@@ -54,9 +54,7 @@ export function App() {
   return (
     <main className="mx-auto max-w-[760px] px-6 py-8">
       <header className="mb-6 flex flex-wrap items-center gap-3">
-        <span className="font-arabic text-[26px] font-bold leading-none text-amber" aria-hidden="true">
-          سياق
-        </span>
+        <span className="text-[22px] font-bold leading-none text-amber">Siyaq</span>
         <h1 className="text-[20px] font-semibold">My words</h1>
         <span className="text-[13px] text-muted">{items.length} saved</span>
         <div className="ml-auto flex gap-2">
@@ -100,11 +98,9 @@ export function App() {
                       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                         <span className="text-[17px] font-semibold text-amber">{item.card.headword}</span>
                         <span className="text-[12px] text-muted">{item.card.partOfSpeech}</span>
-                        <Arabic as="span" className="text-[16px] font-medium">
-                          {item.card.arabic}
-                        </Arabic>
                       </div>
                       <p className="text-[14px]">{item.card.meaning}</p>
+                      <ArabicMeaning card={item.card} />
                       <p className="whitespace-pre-wrap rounded-xl bg-surface-2 p-3 text-[13px] leading-relaxed">
                         <SentenceText segments={item.sentenceSegments} sentence={item.sentence} />
                       </p>
