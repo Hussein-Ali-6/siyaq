@@ -33,6 +33,7 @@ describe('validateDictionary', () => {
     const r = validateDictionary(
       {
         ...good,
+        headword: 'refuse',
         notes: ['a', 'b', 'c'],
         combinations: Array.from({ length: 10 }, (_, i) => `combo ${i}`),
         examples: ['one', 'two', 'three'],
@@ -77,6 +78,18 @@ describe('validateDictionary', () => {
     expect(validateDictionary({ ...good, headword: '' }, passage, [3]).ok).toBe(false);
     expect(validateDictionary(null, passage, [3]).ok).toBe(false);
     expect(validateDictionary('nope', passage, [3]).ok).toBe(false);
+  });
+
+  it('drops combinations when the headword has more than one word', () => {
+    const r = validateDictionary({ ...good, headword: 'chilling effect', combinations: ['have a chilling effect'] }, passage, [3]);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.card.combinations).toEqual([]);
+  });
+
+  it('keeps combinations for a single-word headword', () => {
+    const r = validateDictionary({ ...good, headword: 'decision', combinations: ['make a decision'] }, passage, [3]);
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.card.combinations).toEqual(['make a decision']);
   });
 
   it('drops other meanings whose Arabic is missing', () => {

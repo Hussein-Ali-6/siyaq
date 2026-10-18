@@ -79,7 +79,9 @@ export function validateDictionary(raw: unknown, passage: Passage, selected: num
   const indices = validateIndices(parsed.data.unitIndices, passage, selected);
   if (!indices.ok) return { ok: false, reason: `unitIndices: ${indices.reason}` };
   const { unitIndices: _ignored, ...rest } = parsed.data;
-  return { ok: true, card: { kind: 'word', ...rest, unitIndices: indices.indices } };
+  // Phrasal verbs, idioms, fixed expressions and names never get "Common combinations".
+  const combinations = /\s/.test(rest.headword) ? [] : rest.combinations;
+  return { ok: true, card: { kind: 'word', ...rest, combinations, unitIndices: indices.indices } };
 }
 
 export function validateTranslation(raw: unknown, passage: Passage): Validation<TranslationCard> {

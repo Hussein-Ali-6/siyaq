@@ -24,6 +24,8 @@ interface Expect {
   notes?: 'none' | 'some';
   combos?: 'none' | 'some';
   plain?: 'none' | 'any';
+  keyExpr?: 'none';
+  avoidKeyExpr?: string[];
 }
 interface Selection {
   text: string;
@@ -39,6 +41,9 @@ interface Article {
 }
 
 const here = new URL('.', import.meta.url);
+// Read ANTHROPIC_API_KEY from the project's .env when present, without printing anything from it.
+const envFile = new URL('../../.env', here);
+if (existsSync(envFile) && !process.env.ANTHROPIC_API_KEY) process.loadEnvFile(envFile.pathname);
 const cases = JSON.parse(readFileSync(new URL('cases.json', here), 'utf8')) as { articles: Article[] };
 const args = process.argv.slice(2);
 const live = args.includes('--live');
@@ -104,6 +109,9 @@ function select(dom: JSDOM, sel: Selection) {
   return info;
 }
 
+const FORBIDDEN_NOTE = /pronounc|spell|syllable|grammar|used (?:like|as) an? (?:adjective|noun|verb|adverb)|word origin|comes from the (?:latin|greek|french|spanish)/i;
+const words = (s: string) => s.split(/\s+/).filter(Boolean).length;
+
 function flags(sel: Selection, card: Card): string[] {
   const out: string[] = [];
   const e = sel.expect ?? {};
@@ -111,11 +119,20 @@ function flags(sel: Selection, card: Card): string[] {
     if (e.unit && card.headword.toLowerCase() !== e.unit.toLowerCase()) out.push(`unit: expected "${e.unit}", got "${card.headword}"`);
     if (e.notes === 'none' && card.notes.length) out.push(`unexpected note: ${card.notes.join(' | ')}`);
     if (e.combos === 'none' && card.combinations.length) out.push(`unexpected combinations: ${card.combinations.join(', ')}`);
+    for (const n of card.notes) if (FORBIDDEN_NOTE.test(n)) out.push(`forbidden note topic: ${n}`);
+    for (const m of card.otherMeanings) if (/[()]/.test(m.arabic)) out.push(`other meaning arabic has brackets: ${m.arabic}`);
+    if (/\s/.test(card.headword) && card.combinations.length) out.push('combinations on a multi-word headword');
     if (card.examples.length !== 2) out.push(`examples: ${card.examples.length}`);
     if (/^(here|in this sentence)/i.test(card.meaning)) out.push('meaning retells the sentence');
+    if (/[()]/.test(card.arabic) || words(card.arabic) > 6) out.push(`arabic is not a short equivalent: ${card.arabic}`);
   } else {
     if (e.plain === 'none' && card.plainEnglish) out.push(`unexpected plain English: ${card.plainEnglish}`);
+    if (e.keyExpr === 'none' && card.keyExpressions.length) out.push(`unexpected key expressions: ${card.keyExpressions.map((k) => k.expression).join(', ')}`);
     if (card.keyExpressions.length > 3) out.push('too many key expressions');
+    for (const avoid of e.avoidKeyExpr ?? []) {
+      if (card.keyExpressions.some((k) => k.expression.toLowerCase().includes(avoid))) out.push(`padded key expression: ${avoid}`);
+    }
+    for (const k of card.keyExpressions) if (/[()]/.test(k.arabic)) out.push(`key expression arabic has brackets: ${k.arabic}`);
   }
   return out;
 }
@@ -143,7 +160,7 @@ function cardMarkdown(card: Card): string {
 async function main() {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (live && !apiKey) {
-    console.error('ANTHROPIC_API_KEY is required for --live');
+    console.error('ANTHROPIC_API_KEY is required for --live (environment or .env in the project root)');
     process.exit(1);
   }
   const client = live && apiKey ? createClaudeClient(apiKey) : null;
@@ -170,7 +187,12 @@ async function main() {
       });
       if (res.ok) {
         summary = res.summary;
-        report.push('### Summary', '', res.summary.english, '', res.summary.arabic, '');
+        const n = words(res.summary.english);
+        const ok = n >= 90 && n <= 160;
+        if (!ok) flagged++;
+        total++;
+        console.log(`  • summary: ${n} words ${ok ? '✓' : '⚠ outside 100–150'}`);
+        report.push(`### ${ok ? '✓' : '⚠'} Summary (${n} words)`, '', res.summary.english, '', res.summary.arabic, '');
       } else {
         report.push(`### Summary failed: ${res.error.code} ${res.error.message}`, '');
       }

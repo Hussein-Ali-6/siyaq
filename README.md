@@ -75,9 +75,13 @@ ordinary words, no combinations for idioms, the unit a dictionary would list.
 
 ```bash
 pnpm eval                              # dry run: builds every request, prints the numbered passages
-ANTHROPIC_API_KEY=sk-ant-… pnpm eval --live   # calls Claude, writes scripts/eval/out/report.md
+pnpm eval --live                       # calls Claude, writes scripts/eval/out/report.md
 pnpm eval --live --only guardian       # one article
 ```
+
+`--live` reads `ANTHROPIC_API_KEY` from the environment or from a `.env` file in the project root
+(git-ignored). This key is only for the evaluation script: the extension itself uses the key saved
+on its settings page.
 
 The report shows every card and flags padding (notes on ordinary words, combinations for idioms,
 retold meanings, plain English on clear sentences). Tune `src/lib/claude/prompts.ts`, bump

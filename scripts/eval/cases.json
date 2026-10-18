@@ -4,51 +4,286 @@
       "id": "pg-greatwork",
       "url": "https://paulgraham.com/greatwork.html",
       "selections": [
-        { "text": "aptitude", "kind": "word", "expect": { "notes": "none" }, "why": "ordinary noun" },
-        { "text": "figure", "context": "most have to figure it out", "kind": "word", "expect": { "unit": "figure out", "notes": "none", "combos": "none" }, "why": "phrasal verb, split" },
-        { "text": "get going", "kind": "word", "expect": { "combos": "none" }, "why": "informal phrasal verb" },
-        { "text": "driving", "context": "you'll be driving your", "kind": "word", "why": "figurative verb" },
-        { "text": "rudder", "kind": "word", "why": "figurative image" },
-        { "text": "frontiers", "kind": "word", "expect": { "notes": "none" }, "why": "ordinary noun, figurative but transparent" },
-        { "text": "granted", "context": "took for granted", "kind": "word", "expect": { "unit": "take for granted", "combos": "none" }, "why": "idiom, split" },
-        { "text": "tincture", "kind": "word", "why": "rare word used figuratively" },
-        { "text": "outlier", "kind": "word", "why": "semi-technical" },
-        { "text": "overlooking", "kind": "word", "expect": { "notes": "none" }, "why": "ordinary verb" },
-        { "text": "Knowledge expands fractally, and from a distance its edges look smooth, but once you learn enough to get close to one, they turn out to be full of gaps.", "kind": "sentence", "why": "long sentence with a phrasal verb" },
-        { "text": "It may not be possible to prove that you have to work hard to do great things, but the empirical evidence is on the scale of the evidence for mortality.", "kind": "sentence", "expect": { "plain": "any" }, "why": "dense sentence" }
+        {
+          "text": "aptitude",
+          "kind": "word",
+          "expect": {
+            "notes": "none"
+          },
+          "why": "ordinary noun"
+        },
+        {
+          "text": "figure",
+          "context": "most have to figure it out",
+          "kind": "word",
+          "expect": {
+            "unit": "figure out",
+            "notes": "none",
+            "combos": "none"
+          },
+          "why": "phrasal verb, split"
+        },
+        {
+          "text": "get going",
+          "kind": "word",
+          "expect": {
+            "combos": "none"
+          },
+          "why": "informal phrasal verb"
+        },
+        {
+          "text": "driving",
+          "context": "you'll be driving your",
+          "kind": "word",
+          "why": "figurative verb"
+        },
+        {
+          "text": "rudder",
+          "kind": "word",
+          "why": "figurative image"
+        },
+        {
+          "text": "frontiers",
+          "kind": "word",
+          "expect": {
+            "notes": "none"
+          },
+          "why": "ordinary noun, figurative but transparent"
+        },
+        {
+          "text": "granted",
+          "context": "took for granted",
+          "kind": "word",
+          "expect": {
+            "unit": "take for granted",
+            "combos": "none"
+          },
+          "why": "idiom, split"
+        },
+        {
+          "text": "tincture",
+          "kind": "word",
+          "why": "rare word used figuratively",
+          "expect": {
+            "unit": "tincture"
+          }
+        },
+        {
+          "text": "outlier",
+          "kind": "word",
+          "why": "semi-technical",
+          "expect": {
+            "notes": "none"
+          }
+        },
+        {
+          "text": "overlooking",
+          "kind": "word",
+          "expect": {
+            "notes": "none"
+          },
+          "why": "ordinary verb"
+        },
+        {
+          "text": "Knowledge expands fractally, and from a distance its edges look smooth, but once you learn enough to get close to one, they turn out to be full of gaps.",
+          "kind": "sentence",
+          "why": "long sentence with a phrasal verb",
+          "expect": {
+            "avoidKeyExpr": [
+              "turn out"
+            ]
+          }
+        },
+        {
+          "text": "It may not be possible to prove that you have to work hard to do great things, but the empirical evidence is on the scale of the evidence for mortality.",
+          "kind": "sentence",
+          "expect": {
+            "plain": "any"
+          },
+          "why": "dense sentence"
+        }
       ]
     },
     {
       "id": "guardian-senegal",
       "url": "https://www.theguardian.com/global-development/2026/oct/15/senegal-homosexuality-criminalised-anti-lgbtq-arrests-hiv-testing-human-rights-watch",
       "selections": [
-        { "text": "crackdown", "kind": "word", "expect": { "notes": "none" }, "why": "ordinary news noun" },
-        { "text": "toughened", "kind": "word", "expect": { "notes": "none" }, "why": "ordinary verb" },
-        { "text": "chilling", "context": "chilling effect", "kind": "word", "expect": { "unit": "chilling effect" }, "why": "fixed expression" },
-        { "text": "foot", "context": "shooting themselves in the foot", "kind": "word", "expect": { "unit": "shoot yourself in the foot", "combos": "none" }, "why": "idiom" },
-        { "text": "nonsensical", "kind": "word", "expect": { "notes": "none" }, "why": "ordinary adjective" },
-        { "text": "face", "context": "flew in the face of", "kind": "word", "expect": { "unit": "fly in the face of", "combos": "none" }, "why": "idiom" },
-        { "text": "punitive", "kind": "word", "why": "formal adjective" },
-        { "text": "juntas", "kind": "word", "why": "political term, borrowed word" },
-        { "text": "Human Rights Watch", "kind": "word", "expect": { "combos": "none" }, "why": "organisation name" },
-        { "text": "anecdotal", "kind": "word", "why": "adjective with a strong partner (evidence)" },
-        { "text": "The changes to the penal code have had a chilling effect on lawyers, who said they were afraid to represent people for fear of being prosecuted themselves, according to the report.", "kind": "sentence", "why": "long sentence with one fixed expression" },
-        { "text": "They are shooting themselves in the foot.", "kind": "sentence", "why": "short sentence that is an idiom" }
+        {
+          "text": "crackdown",
+          "kind": "word",
+          "expect": {
+            "notes": "none"
+          },
+          "why": "ordinary news noun"
+        },
+        {
+          "text": "toughened",
+          "kind": "word",
+          "expect": {
+            "notes": "none"
+          },
+          "why": "ordinary verb"
+        },
+        {
+          "text": "chilling",
+          "context": "chilling effect",
+          "kind": "word",
+          "expect": {
+            "unit": "chilling effect",
+            "notes": "none",
+            "combos": "none"
+          },
+          "why": "fixed expression"
+        },
+        {
+          "text": "foot",
+          "context": "shooting themselves in the foot",
+          "kind": "word",
+          "expect": {
+            "unit": "shoot yourself in the foot",
+            "combos": "none"
+          },
+          "why": "idiom"
+        },
+        {
+          "text": "nonsensical",
+          "kind": "word",
+          "expect": {
+            "notes": "none",
+            "combos": "none"
+          },
+          "why": "ordinary adjective"
+        },
+        {
+          "text": "face",
+          "context": "flew in the face of",
+          "kind": "word",
+          "expect": {
+            "unit": "fly in the face of",
+            "combos": "none",
+            "notes": "none"
+          },
+          "why": "idiom"
+        },
+        {
+          "text": "punitive",
+          "kind": "word",
+          "why": "formal adjective"
+        },
+        {
+          "text": "juntas",
+          "kind": "word",
+          "why": "political term, borrowed word",
+          "expect": {
+            "unit": "junta",
+            "notes": "none"
+          }
+        },
+        {
+          "text": "Human Rights Watch",
+          "kind": "word",
+          "expect": {
+            "combos": "none",
+            "notes": "none"
+          },
+          "why": "organisation name"
+        },
+        {
+          "text": "anecdotal",
+          "kind": "word",
+          "why": "adjective with a strong partner (evidence)",
+          "expect": {
+            "notes": "none"
+          }
+        },
+        {
+          "text": "The changes to the penal code have had a chilling effect on lawyers, who said they were afraid to represent people for fear of being prosecuted themselves, according to the report.",
+          "kind": "sentence",
+          "why": "long sentence with one fixed expression"
+        },
+        {
+          "text": "They are shooting themselves in the foot.",
+          "kind": "sentence",
+          "why": "short sentence that is an idiom"
+        }
       ]
     },
     {
       "id": "wikipedia-apollo11",
       "url": "https://en.wikipedia.org/wiki/Apollo_11",
       "selections": [
-        { "text": "culmination", "kind": "word", "expect": { "notes": "none" }, "why": "ordinary formal noun" },
-        { "text": "atop", "kind": "word", "why": "literary preposition" },
-        { "text": "splashing", "context": "splashing down in the Pacific", "kind": "word", "expect": { "unit": "splash down" }, "why": "phrasal verb, technical sense" },
-        { "text": "setback", "kind": "word", "expect": { "notes": "none" }, "why": "ordinary noun" },
-        { "text": "ticker", "context": "ticker-tape parades", "kind": "word", "expect": { "unit": "ticker-tape parade" }, "why": "cultural reference, hyphenated" },
-        { "text": "Saturn", "context": "Saturn V rocket", "kind": "word", "expect": { "unit": "Saturn V", "combos": "none" }, "why": "name" },
-        { "text": "lunar", "context": "remained in lunar orbit aboard", "kind": "word", "why": "technical adjective" },
-        { "text": "leap", "context": "one giant leap for mankind", "kind": "word", "why": "famous quotation, figurative" },
-        { "text": "The Soviet Union, despite early leads in spaceflight, was unable to match the Saturn V rocket, and its uncrewed lunar probe Luna 15 crashed on the Moon on July 21, while Neil Armstrong and Buzz Aldrin were still on the lunar surface.", "kind": "sentence", "expect": { "plain": "none" }, "why": "long but clear sentence: no plain English expected" }
+        {
+          "text": "culmination",
+          "kind": "word",
+          "expect": {
+            "notes": "none"
+          },
+          "why": "ordinary formal noun"
+        },
+        {
+          "text": "atop",
+          "kind": "word",
+          "why": "literary preposition"
+        },
+        {
+          "text": "splashing",
+          "context": "splashing down in the Pacific",
+          "kind": "word",
+          "expect": {
+            "unit": "splash down"
+          },
+          "why": "phrasal verb, technical sense"
+        },
+        {
+          "text": "setback",
+          "kind": "word",
+          "expect": {
+            "notes": "none"
+          },
+          "why": "ordinary noun"
+        },
+        {
+          "text": "ticker",
+          "context": "ticker-tape parades",
+          "kind": "word",
+          "expect": {
+            "unit": "ticker-tape parade",
+            "notes": "none"
+          },
+          "why": "cultural reference, hyphenated"
+        },
+        {
+          "text": "Saturn",
+          "context": "Saturn V rocket",
+          "kind": "word",
+          "expect": {
+            "unit": "Saturn V",
+            "combos": "none",
+            "notes": "none"
+          },
+          "why": "name"
+        },
+        {
+          "text": "lunar",
+          "context": "remained in lunar orbit aboard",
+          "kind": "word",
+          "why": "technical adjective"
+        },
+        {
+          "text": "leap",
+          "context": "one giant leap for mankind",
+          "kind": "word",
+          "why": "famous quotation, figurative"
+        },
+        {
+          "text": "The Soviet Union, despite early leads in spaceflight, was unable to match the Saturn V rocket, and its uncrewed lunar probe Luna 15 crashed on the Moon on July 21, while Neil Armstrong and Buzz Aldrin were still on the lunar surface.",
+          "kind": "sentence",
+          "expect": {
+            "plain": "none",
+            "keyExpr": "none"
+          },
+          "why": "long but clear sentence: no plain English expected"
+        }
       ]
     }
   ]

@@ -114,8 +114,30 @@ unique, in range and overlapping the selection (reject → retry once with the r
 - Tailwind v4 only scans from the Vite root; `@source "../"` in the theme makes the playground and the
   extension generate the same utilities.
 - `@vitejs/plugin-react` 6 needs Vite 8; the project pins v5 through a pnpm override with Vite 7.
-- The dry-run evaluation (`pnpm eval`) builds all 33 requests on the real pages; the live run needs an
-  API key and was not run in the build session.
+- Tailwind's internal variables get their defaults from `@property`, which Chrome ignores inside a
+  shadow root, so the card's borders and shadow vanished. `withShadowPropertyDefaults` copies those
+  defaults onto the shadow tree inside Tailwind's `properties` layer.
+
+## Live evaluation (2026-10-18)
+
+33 selections from three articles plus three summaries, checked automatically and read by hand.
+
+| Prompt version | Flagged cases | Word cards with a note |
+|---|---|---|
+| 1 | about 11 of 36 (re-scored by hand against the final checks) | 15 of 29 |
+| 2 | 5 of 36 | 8 of 29 |
+| 3 | 6 of 36 | 7 of 29 |
+| 4 (shipped) | 5 of 36 | 6 of 29 |
+
+Fixed by tuning: pronunciation and grammar notes, notes restating the meaning, trivia about names,
+over-wide units ("military junta", "a tincture of"), literal metaphors ("rudder"), Arabic fields that
+translated neighbouring words or carried brackets, summaries over 150 words. Multi-word headwords never
+get combinations (enforced in `validate.ts`).
+
+Still borderline after four rounds, and varying run to run at effort low: a usage note on "chilling
+effect", a history note on "ticker-tape parade", free pairings listed for "nonsensical", and "turn out
+to be" or "match" listed as key expressions. Further prompt rounds stopped helping; raising effort is the
+remaining lever.
 
 ## Build order
 
