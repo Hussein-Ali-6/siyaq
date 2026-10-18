@@ -6,10 +6,10 @@ export function TriggerIcon({ x, y, onOpen }: { x: number; y: number; onOpen: ()
       aria-label="Look up with Siyaq"
       onMouseDown={(e) => e.preventDefault()}
       onClick={onOpen}
-      className="absolute flex h-10 w-10 items-center justify-center rounded-full border border-border bg-surface text-amber shadow-card transition-colors hover:border-amber"
+      className="absolute flex h-8.5 w-8.5 items-center justify-center rounded-full border border-border bg-surface text-amber shadow-card transition-colors hover:border-amber"
       style={{ top: y, left: x }}
     >
-      <span className="font-arabic text-[22px] font-bold leading-none" aria-hidden="true" style={{ lineHeight: 1, marginTop: '-0.15em' }}>
+      <span className="font-arabic text-[19px] font-bold leading-none" aria-hidden="true" style={{ lineHeight: 1, marginTop: '-0.15em' }}>
         س
       </span>
     </button>

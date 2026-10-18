@@ -108,7 +108,7 @@ export class SiyaqController {
     this.pending = info;
     const rects = info.range.getClientRects();
     const last = rects[rects.length - 1] ?? info.range.getBoundingClientRect();
-    const x = Math.min(last.right + 6, window.innerWidth - 48) + scrollX;
+    const x = Math.min(last.right + 6, window.innerWidth - 42) + scrollX;
     const y = last.bottom + 6 + scrollY;
     this.state.icon = { x, y };
     this.render();
