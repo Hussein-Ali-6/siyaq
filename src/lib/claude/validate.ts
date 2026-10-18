@@ -3,7 +3,6 @@ import { validateIndices } from '@/lib/text/tokens';
 import type { DictionaryCard, KeyExpression, Passage, Summary, TranslationCard } from '@/lib/types';
 
 export const LIMITS = {
-  notes: 2,
   examples: 2,
   combinations: 6,
   otherMeanings: 4,
@@ -23,8 +22,8 @@ const ipa = z.unknown().optional().transform((v) => {
   return s.length > 80 ? '' : s;
 });
 
-/** A list of strings, blanks removed, trimmed to `max`. Anything that is not a list becomes empty. */
-const stringList = (max: number) =>
+/** A list of strings, blanks removed, trimmed to `max` when given. Anything that is not a list becomes empty. */
+const stringList = (max = Infinity) =>
   z
     .array(z.unknown())
     .catch([])
@@ -45,7 +44,8 @@ const dictionarySchema = z.object({
   unitIndices: z.unknown(),
   meaning: nonEmpty,
   arabic,
-  notes: stringList(LIMITS.notes),
+  // No cap on notes: the model decides how many are useful.
+  notes: stringList(),
   sentenceArabic: arabic,
   examples: stringList(LIMITS.examples).refine((a) => a.length >= 1, { message: 'at least one example is required' }),
   combinations: stringList(LIMITS.combinations),

@@ -46,7 +46,7 @@ describe('validateDictionary', () => {
     );
     expect(r.ok).toBe(true);
     if (r.ok) {
-      expect(r.card.notes).toHaveLength(2);
+      expect(r.card.notes).toEqual(['a', 'b', 'c']);
       expect(r.card.combinations).toHaveLength(6);
       expect(r.card.examples).toHaveLength(2);
       expect(r.card.otherMeanings).toHaveLength(4);

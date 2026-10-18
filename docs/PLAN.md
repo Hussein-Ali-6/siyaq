@@ -101,7 +101,7 @@ indices to DOM ranges → highlight → card renders.
 Encoded verbatim from the brief in `prompts.ts` (meaning = general B1 definition, Arabic = usual equivalent,
 notes default empty with the five allowed reasons, combinations only for strong partners, worked examples
 with empty lists). API schema has no enums/min/max; `validate.ts` enforces: Arabic script present, 1–2
-examples, ≤2 notes, ≤6 combinations, ≤4 other meanings, ≤3 key expressions (trim, not reject), indices
+examples, no cap on notes (the model decides, since 2026-10-18), ≤6 combinations, ≤4 other meanings, ≤3 key expressions (trim, not reject), indices
 unique, in range and overlapping the selection (reject → retry once with the reason appended).
 
 ## Learned while building (2026-10-16)

@@ -28,6 +28,7 @@ describe('system prompts', () => {
     expect(DICTIONARY_SYSTEM).toContain('"ipaUk"');
     expect(DICTIONARY_SYSTEM).toContain('"ipaUs"');
     expect(DICTIONARY_SYSTEM).not.toContain('does not want pronunciation');
+    expect(DICTIONARY_SYSTEM).not.toContain('at most two notes');
     expect(DICTIONARY_SYSTEM).toContain('"combinations": []');
     expect(TRANSLATION_SYSTEM).toContain('"keyExpressions": []');
     expect(TRANSLATION_SYSTEM).toContain('"plainEnglish": ""');
