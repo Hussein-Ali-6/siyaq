@@ -4,6 +4,7 @@
  *   pnpm eval            dry run: builds every request and prints the numbered passages
  *   pnpm eval --live     calls Claude (needs ANTHROPIC_API_KEY) and writes scripts/eval/out/report.md
  *   pnpm eval --only pg  limits to articles whose id contains "pg"
+ *   pnpm eval --live --pick crackdown,outlier --no-summary   only those selections, no summaries
  *
  * Pages are fetched once and cached under scripts/eval/.cache/.
  */
@@ -47,7 +48,11 @@ if (existsSync(envFile) && !process.env.ANTHROPIC_API_KEY) process.loadEnvFile(e
 const cases = JSON.parse(readFileSync(new URL('cases.json', here), 'utf8')) as { articles: Article[] };
 const args = process.argv.slice(2);
 const live = args.includes('--live');
-const only = args[args.indexOf('--only') + 1];
+const flagValue = (name: string) => (args.includes(name) ? args[args.indexOf(name) + 1] : undefined);
+const only = flagValue('--only');
+const pick = flagValue('--pick')?.split(',').map((p) => p.trim().toLowerCase()).filter(Boolean);
+const withSummary = !args.includes('--no-summary');
+const picked = (sel: Selection) => !pick || pick.some((p) => sel.text.toLowerCase().startsWith(p));
 const cacheDir = new URL('.cache/', here);
 const outDir = new URL('out/', here);
 mkdirSync(cacheDir, { recursive: true });
@@ -120,12 +125,9 @@ function flags(sel: Selection, card: Card): string[] {
     if (e.notes === 'none' && card.notes.length) out.push(`unexpected note: ${card.notes.join(' | ')}`);
     if (e.combos === 'none' && card.combinations.length) out.push(`unexpected combinations: ${card.combinations.join(', ')}`);
     for (const n of card.notes) if (FORBIDDEN_NOTE.test(n)) out.push(`forbidden note topic: ${n}`);
-    for (const m of card.otherMeanings) if (/[()]/.test(m.arabic)) out.push(`other meaning arabic has brackets: ${m.arabic}`);
     if (card.examples.length !== 2) out.push(`examples: ${card.examples.length}`);
     if (/^(here|in this sentence)/i.test(card.meaning)) out.push('meaning retells the sentence');
-    if (card.arabic && words(card.arabic) > 6) out.push(`arabic equivalent is long: ${card.arabic}`);
-    if (!card.arabicMeaning) out.push('missing Arabic explanation');
-    else if (words(card.arabicMeaning) > 30) out.push(`Arabic explanation is long (${words(card.arabicMeaning)} words)`);
+    if (words(card.arabic) > 25) out.push(`Arabic is long (${words(card.arabic)} words)`);
   } else {
     if (e.plain === 'none' && card.plainEnglish) out.push(`unexpected plain English: ${card.plainEnglish}`);
     if (e.keyExpr === 'none' && card.keyExpressions.length) out.push(`unexpected key expressions: ${card.keyExpressions.map((k) => k.expression).join(', ')}`);
@@ -133,7 +135,6 @@ function flags(sel: Selection, card: Card): string[] {
     for (const avoid of e.avoidKeyExpr ?? []) {
       if (card.keyExpressions.some((k) => k.expression.toLowerCase().includes(avoid))) out.push(`padded key expression: ${avoid}`);
     }
-    for (const k of card.keyExpressions) if (/[()]/.test(k.arabic)) out.push(`key expression arabic has brackets: ${k.arabic}`);
   }
   return out;
 }
@@ -143,8 +144,7 @@ function cardMarkdown(card: Card): string {
     return [
       `**${card.headword}** · ${card.partOfSpeech} · unit ${JSON.stringify(card.unitIndices)}`,
       `- meaning: ${card.meaning}`,
-      `- arabic: ${card.arabic || '(none)'}`,
-      `- arabic meaning: ${card.arabicMeaning ?? '(none)'}`,
+      `- arabic: ${card.arabic}`,
       `- notes: ${card.notes.length ? card.notes.join(' | ') : '(none)'}`,
       `- sentence (ar): ${card.sentenceArabic}`,
       `- examples: ${card.examples.join(' | ')}`,
@@ -172,6 +172,7 @@ async function main() {
 
   for (const article of cases.articles) {
     if (only && !article.id.includes(only)) continue;
+    if (!article.selections.some(picked)) continue;
     const html = await fetchHtml(article);
     const dom = new JSDOM(html, { url: article.url });
     installGlobals(dom);
@@ -182,7 +183,7 @@ async function main() {
     report.push(`## ${article.id}`, '', `${page.title} — ${article.url}`, '');
 
     let summary: Summary | null = null;
-    if (client) {
+    if (client && withSummary) {
       const res = await performSummary({ url: article.url, title: page.title, siteName: page.siteName, text: extracted.text }, {
         client,
         cache: { get: async () => null, set: async () => undefined },
@@ -201,6 +202,7 @@ async function main() {
     }
 
     for (const sel of article.selections) {
+      if (!picked(sel)) continue;
       total++;
       let request: LookupRequest;
       try {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { browser } from 'wxt/browser';
-import { MODEL } from '@/lib/claude/client';
+import { EFFORT, MODEL } from '@/lib/claude/client';
 import { sendMessage } from '@/lib/messaging';
 import { cacheStats } from '@/lib/storage/cache';
 import { getApiKey, getPrefs, setApiKey, setPrefs } from '@/lib/storage/settings';
@@ -94,7 +94,7 @@ export function App() {
         </div>
         {note && <p className={`text-[13px] ${note.ok ? 'text-amber' : 'text-danger'}`}>{note.text}</p>}
         <p className="text-[12px] text-faint">
-          Model: {MODEL}, effort low, structured outputs, cached system prompts. Each lookup costs a fraction of a cent.
+          Model: {MODEL}, effort {EFFORT}, structured outputs, cached system prompts. Each lookup costs a fraction of a cent.
         </p>
       </section>
 

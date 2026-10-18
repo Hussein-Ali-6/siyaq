@@ -16,8 +16,6 @@ const trimmed = z.string().transform((s) => s.trim());
 const nonEmpty = trimmed.pipe(z.string().min(1));
 const arabic = nonEmpty.refine((s) => ARABIC.test(s), { message: 'must contain Arabic script' });
 const optionalString = trimmed.catch('');
-/** Empty is allowed; anything else must contain Arabic script. */
-const optionalArabic = trimmed.catch('').refine((s) => s === '' || ARABIC.test(s), { message: 'must be empty or contain Arabic script' });
 
 /** A list of strings, blanks removed, trimmed to `max`. Anything that is not a list becomes empty. */
 const stringList = (max: number) =>
@@ -38,8 +36,7 @@ const dictionarySchema = z.object({
   partOfSpeech: optionalString,
   unitIndices: z.unknown(),
   meaning: nonEmpty,
-  arabic: optionalArabic,
-  arabicMeaning: arabic,
+  arabic,
   notes: stringList(LIMITS.notes),
   sentenceArabic: arabic,
   examples: stringList(LIMITS.examples).refine((a) => a.length >= 1, { message: 'at least one example is required' }),

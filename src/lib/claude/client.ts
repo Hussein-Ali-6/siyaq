@@ -4,6 +4,8 @@ import type { JsonSchema } from '@/lib/claude/schemas';
 
 export const MODEL = 'claude-sonnet-5-5';
 export const REQUEST_TIMEOUT_MS = 30_000;
+/** Medium lets the model judge notes and units more carefully than low; chosen 2026-10-18. */
+export const EFFORT = 'medium' as const;
 /** Re-run a safety-classifier decline on a fallback model server-side (Claude API only). */
 export const USE_REFUSAL_FALLBACK = true;
 
@@ -82,7 +84,7 @@ export function createClaudeClient(apiKey: string): ClaudeClient {
           { type: 'text', text: call.context, cache_control: { type: 'ephemeral' } },
         ],
         messages: [{ role: 'user', content: call.user }],
-        output_config: { effort: 'low', format: { type: 'json_schema', schema: call.schema } },
+        output_config: { effort: EFFORT, format: { type: 'json_schema', schema: call.schema } },
       };
       if (USE_REFUSAL_FALLBACK) {
         params.betas = ['server-side-fallback-2026-07-01'];

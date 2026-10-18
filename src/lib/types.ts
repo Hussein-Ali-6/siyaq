@@ -53,9 +53,9 @@ export interface DictionaryCard {
   /** Indices of the unit's words in the passage, verified against the request. */
   unitIndices: number[];
   meaning: string;
-  /** Closest Arabic equivalent; empty when none fits this sense well. */
+  /** The Arabic for this sense, with a short clarification when a single word would mislead. */
   arabic: string;
-  /** A short Arabic sentence explaining this sense. Missing on cards saved before it existed. */
+  /** Only on cards saved while the explanation was a separate field; shown and searched for those. */
   arabicMeaning?: string;
   notes: string[];
   sentenceArabic: string;

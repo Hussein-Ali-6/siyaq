@@ -77,7 +77,7 @@ describe('searchSaved', () => {
     expect(searchSaved(items, 'احمد').map((i) => i.id)).toEqual(['c']);
   });
 
-  it('matches the Arabic explanation', () => {
+  it('still matches the Arabic explanation on cards saved while it was a separate field', () => {
     expect(searchSaved(items, 'شرح رفض').map((i) => i.id)).toEqual(['a']);
   });
 
@@ -93,8 +93,8 @@ describe('export', () => {
     ];
     const csv = toCsv(items);
     const lines = csv.split('\n');
-    expect(lines[0]).toBe('kind,headword,arabic,arabic_meaning,meaning,sentence,translation,page,url,saved');
-    expect(lines[1]).toContain('شرح قال');
+    expect(lines[0]).toBe('kind,headword,arabic,meaning,sentence,translation,page,url,saved');
+    expect(lines[1]).toContain('قال — شرح قال');
     expect(lines[1]).toContain('"say ""hi"""');
     expect(lines[1]).toContain('2026-10-16');
     expect(JSON.parse(toJson(items))).toHaveLength(1);

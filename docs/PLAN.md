@@ -8,7 +8,7 @@ Plan written 2026-10-16 before implementation. Kept up to date as the architectu
 |---|---|---|
 | Toolchain | **WXT** (not Vite + CRXJS) | WXT generates the MV3 manifest from entrypoints, has first-class content-script/shadow-DOM support and HMR, and is actively maintained; CRXJS has had long maintenance gaps. |
 | API client | Official `@anthropic-ai/sdk` in the service worker, `messages.create()` + **own zod validation** (never `messages.parse()`) | Typed errors, timeouts and transport retries for free; `parse()` would throw on constraint mismatches and skip the app-level retry. |
-| Model/params | `claude-sonnet-5-5`, `output_config: { effort: "low", format: json_schema }`, adaptive thinking left on (Sonnet 5.5 rejects `disabled`; at `low` it rarely thinks) | Matches the brief; structured outputs are GA. |
+| Model/params | `claude-sonnet-5-5`, `output_config: { effort: "medium", format: json_schema }`, adaptive thinking left on | Started at low as briefed; moved to medium on 2026-10-18 at the user's choice. Lookups still take 3 to 4 seconds. |
 | Refusal fallback | `fallbacks: "default"` with beta `server-side-fallback-2026-07-01` | A safety-classifier decline (e.g. an article about malware) gets re-run server-side instead of showing an error. One constant to switch off. |
 | Caching | Two cache breakpoints: static system prompt, then a per-page "article context" block (title, site, summary) | Same-page lookups re-use both; the 512-token minimum is cleared by the system prompt. |
 | Numbered tokens | Sent for **both** card kinds. For sentences the selection itself is numbered, so key expressions come back with word indices | Lets us verify each key expression, highlight it, and open its dictionary card without fuzzy string matching. |
@@ -138,6 +138,22 @@ Still borderline after four rounds, and varying run to run at effort low: a usag
 effect", a history note on "ticker-tape parade", free pairings listed for "nonsensical", and "turn out
 to be" or "match" listed as key expressions. Further prompt rounds stopped helping; raising effort is the
 remaining lever.
+
+## Prompt style after user testing (2026-10-18)
+
+The user asked for looser prompts that let the model decide, one Arabic field that adds detail only when
+needed, grammar notes allowed, notes on roughly a third of cards, and medium effort. Measured on small
+samples to limit cost:
+
+| Version | What changed | Result |
+|---|---|---|
+| 5 | Fully loose, separate Arabic explanation field | Notes on 25 of 28 word cards, widened units, padded key expressions |
+| 6 to 8 | Purpose sentences, "most cards have none", a short list | Notes on 15 to 22 of 28 |
+| 9 | One Arabic field, grammar allowed, medium effort | Notes on all 9 of a note-prone sample, widened units |
+| 10 (shipped) | Notes opt-in with grammar as an allowed reason, two unit examples | Notes on 7 of 9 note-prone words and 1 of 6 everyday words, units right |
+
+Everything outside notes stays loose. Units and the Arabic field are guided by a sentence each.
+Experimental prompts and reports are kept in `scripts/eval/out` (git-ignored).
 
 ## Build order
 

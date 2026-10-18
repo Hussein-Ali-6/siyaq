@@ -48,8 +48,9 @@ export async function cacheKeyFor(req: LookupRequest): Promise<string> {
 }
 
 function maxTokensFor(req: LookupRequest): number {
-  if (req.kind === 'word') return 1500;
-  return Math.min(6000, 800 + countWords(req.selection) * 6);
+  // Thinking counts toward max_tokens, so leave room for it at medium effort.
+  if (req.kind === 'word') return 4000;
+  return Math.min(10000, 3000 + countWords(req.selection) * 8);
 }
 
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));

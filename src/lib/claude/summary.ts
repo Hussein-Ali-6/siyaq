@@ -40,7 +40,7 @@ async function summarize(input: SummaryInput, deps: SummaryDeps): Promise<Summar
         context,
         user,
         schema: SUMMARY_SCHEMA,
-        maxTokens: 1500,
+        maxTokens: 5000,
       }));
     } catch (err) {
       const e = err instanceof ClaudeError ? err : new ClaudeError('unknown', 'Unexpected error while contacting Claude.');

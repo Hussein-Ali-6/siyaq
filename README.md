@@ -7,7 +7,7 @@ the article, not just the word.
 
 ## How it works
 
-- **Trigger.** Selecting text (a double-click selects a word) shows a small "Siyaq" button next to
+- **Trigger.** Selecting text (a double-click selects a word) shows a small round س button next to
   the selection. Nothing is sent anywhere until you click it. The icon never appears in inputs,
   textareas or editable areas.
 - **Dictionary card** (up to 4 words): Claude decides the unit you mean (a word, or part of a phrasal
@@ -15,8 +15,8 @@ the article, not just the word.
   headword and part of speech, the meaning in this sentence in simple English plus the usual Arabic
   equivalent, "Good to know" notes only when needed, the sentence with the unit in bold, its Arabic
   translation blurred until clicked, two examples, "Common combinations" only for words with strong
-  partners, other meanings collapsed, and ★ Save. The Arabic comes as the closest equivalent when one
-  fits well, plus a short Arabic sentence explaining the sense, because one word rarely carries all of it.
+  partners, other meanings collapsed, and ★ Save. The Arabic is the usual equivalent, with a few words of
+  clarification when a single Arabic word would mislead, for example because it has several meanings.
 - **Translation card** (a sentence or longer): a natural Arabic translation, plainer English only when
   the original is hard, and at most three "Key expressions" that open their own dictionary card.
 - **Context sent with every request:** page title and site, the article summary once it exists, the

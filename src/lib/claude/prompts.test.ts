@@ -24,7 +24,7 @@ describe('system prompts', () => {
   it('are long enough to be cached and contain worked examples with empty lists', () => {
     expect(DICTIONARY_SYSTEM.length).toBeGreaterThan(3000);
     expect(DICTIONARY_SYSTEM).toContain('"notes": []');
-    expect(DICTIONARY_SYSTEM).toContain('"arabicMeaning"');
+    expect(DICTIONARY_SYSTEM).not.toContain('arabicMeaning');
     expect(DICTIONARY_SYSTEM).toContain('"combinations": []');
     expect(TRANSLATION_SYSTEM).toContain('"keyExpressions": []');
     expect(TRANSLATION_SYSTEM).toContain('"plainEnglish": ""');
