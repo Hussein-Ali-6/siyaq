@@ -2,7 +2,7 @@ import { Readability, isProbablyReaderable } from '@mozilla/readability';
 import { blockText, isBlock } from '@/lib/dom/blocks';
 import { normalizeWhitespace } from '@/lib/text/words';
 
-export const ARTICLE_MAX_WORDS = 6000;
+export const ARTICLE_MAX_WORDS = 4000;
 
 export interface ArticleText {
   title: string;

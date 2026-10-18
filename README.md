@@ -26,7 +26,7 @@ the article, not just the word.
   paragraph around the selection widened to 150–400 words, and the selection as numbered word tokens
   (`[12]gave [13]up`) so Claude's answer can be checked and the exact words highlighted on the page.
 - **Article summary.** The first card opened on a page starts a summary in the background
-  (Mozilla Readability, capped at 6,000 words). It is cached per URL, sent as context with later
+  (Mozilla Readability, capped at 4,000 words). It is cached per URL, sent as context with later
   requests, and shown by the book button in the card header and in the toolbar popup.
 - **Saved items** live in `chrome.storage.local`. The "My words" page lists them newest first, with
   search in English or Arabic, a link back to the source sentence, delete, and JSON/CSV export.

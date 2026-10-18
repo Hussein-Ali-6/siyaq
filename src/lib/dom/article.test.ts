@@ -38,6 +38,15 @@ describe('extractArticle', () => {
     expect(text).toMatch(/Second block\.\n+After a line break\./);
   });
 
+  it('sends at most 4,000 words of the page to the summary', () => {
+    document.head.innerHTML = '';
+    document.title = 'Long page';
+    document.body.innerHTML = `<div>${Array.from({ length: 4500 }, (_, i) => `w${i}`).join(' ')}</div>`;
+    const words = extractArticle(document).text.split(/\s+/);
+    expect(words).toHaveLength(4000);
+    expect(words[3999]).toBe('w3999');
+  });
+
   it('uses the first heading when the page has no title', () => {
     document.head.innerHTML = '';
     document.body.innerHTML = '<h1>Heading Only</h1><div>Just a few words here.</div>';

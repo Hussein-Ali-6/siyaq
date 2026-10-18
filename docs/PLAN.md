@@ -41,7 +41,7 @@ src/lib/
   dom/flat.ts            flat text model of a block; DOM Range <-> offsets
   dom/selection.ts       reads the selection, builds a LookupRequest
   dom/highlight.ts       CSS Custom Highlight API wrapper
-  dom/article.ts         Readability extraction, 6,000-word cap
+  dom/article.ts         Readability extraction, 4,000-word cap (was 6,000 until 2026-10-18)
   claude/client.ts       SDK client, structured call with timeout + error mapping
   claude/prompts.ts      system prompts (with worked examples) and user-message builders
   claude/schemas.ts      loose JSON schemas sent to the API
