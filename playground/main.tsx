@@ -125,6 +125,14 @@ for (const s of scenarios) {
   };
   toolbar.append(b);
 }
+const smallRoot = document.createElement('button');
+smallRoot.textContent = 'site root 10px';
+smallRoot.title = 'Simulate a site that sets html { font-size: 62.5% }';
+smallRoot.onclick = () => {
+  const el = document.documentElement;
+  el.style.fontSize = el.style.fontSize ? '' : '62.5%';
+};
+toolbar.append(smallRoot);
 const dark = document.createElement('button');
 dark.textContent = 'page dark/light';
 dark.onclick = () => document.body.classList.toggle('dark');
