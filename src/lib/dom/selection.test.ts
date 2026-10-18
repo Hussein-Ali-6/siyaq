@@ -122,3 +122,11 @@ describe('buildLookupRequest', () => {
     expect(ranges.map((r) => r.toString())).toEqual(['turned', 'down']);
   });
 });
+
+describe('readSelection on Arabic text', () => {
+  it('returns null so the button does not appear', () => {
+    document.body.innerHTML = '<p id="ar">ذهب أحمد إلى السوق صباح اليوم</p>';
+    selectText(document.getElementById('ar')!, 'السوق');
+    expect(readSelection(document)).toBeNull();
+  });
+});

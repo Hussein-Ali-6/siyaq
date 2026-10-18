@@ -7,8 +7,9 @@ the article, not just the word.
 
 ## How it works
 
-- **Trigger.** Selecting text (a double-click selects a word) shows a small round س button next to
-  the selection. Nothing is sent anywhere until you click it. The icon never appears in inputs,
+- **Trigger.** Selecting English text (a double-click selects a word) shows a small round س button next to
+  the selection. Selections that are mostly Arabic, another script, or only numbers and symbols don't
+  show it. Nothing is sent anywhere until you click it. The icon never appears in inputs,
   textareas or editable areas.
 - **Dictionary card** (up to 4 words): Claude decides the unit you mean (a word, or part of a phrasal
   verb, idiom or fixed expression, even split ones like "turned the offer down"), then shows the

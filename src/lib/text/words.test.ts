@@ -34,3 +34,31 @@ describe('normalizeWhitespace', () => {
     expect(normalizeWhitespace('a b')).toBe('a b');
   });
 });
+
+describe('classifySelection on non-English text', () => {
+  it('ignores Arabic words and sentences', () => {
+    expect(classifySelection('كتاب')).toBeNull();
+    expect(classifySelection('ذهب أحمد إلى السوق صباح اليوم')).toBeNull();
+  });
+
+  it('ignores numbers, symbols and emoji on their own', () => {
+    expect(classifySelection('2024')).toBeNull();
+    expect(classifySelection('12:30 — 45%')).toBeNull();
+    expect(classifySelection('🙂👍')).toBeNull();
+  });
+
+  it('ignores other scripts', () => {
+    expect(classifySelection('東京')).toBeNull();
+    expect(classifySelection('Привет')).toBeNull();
+  });
+
+  it('accepts English that contains digits or accented letters', () => {
+    expect(classifySelection('COVID-19')).toBe('word');
+    expect(classifySelection('café')).toBe('word');
+  });
+
+  it('decides mixed selections by which letters are in the majority', () => {
+    expect(classifySelection('The word كتاب means book in Arabic')).toBe('sentence');
+    expect(classifySelection('ذهب أحمد إلى السوق ثم قال OK')).toBeNull();
+  });
+});
