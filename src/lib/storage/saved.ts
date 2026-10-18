@@ -73,15 +73,15 @@ function csvCell(value: string): string {
   return /[",\n\r]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
 }
 
-export const CSV_HEADER = ['kind', 'headword', 'arabic', 'meaning', 'sentence', 'translation', 'page', 'url', 'saved'];
+export const CSV_HEADER = ['kind', 'headword', 'ipa_uk', 'ipa_us', 'arabic', 'meaning', 'sentence', 'translation', 'page', 'url', 'saved'];
 
 export function toCsv(items: SavedItem[]): string {
   const rows = items.map((item) => {
     const saved = new Date(item.savedAt).toISOString().slice(0, 10);
     const cells =
       item.card.kind === 'word'
-        ? ['word', item.card.headword, arabicText(item.card), item.card.meaning, item.sentence, item.card.sentenceArabic]
-        : ['sentence', '', '', item.card.plainEnglish, item.selection, item.card.arabic];
+        ? ['word', item.card.headword, item.card.ipaUk ?? '', item.card.ipaUs ?? '', arabicText(item.card), item.card.meaning, item.sentence, item.card.sentenceArabic]
+        : ['sentence', '', '', '', '', item.card.plainEnglish, item.selection, item.card.arabic];
     return [...cells, item.pageTitle, item.url, saved].map(csvCell).join(',');
   });
   return [CSV_HEADER.join(','), ...rows].join('\n');

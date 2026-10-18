@@ -128,6 +128,7 @@ function flags(sel: Selection, card: Card): string[] {
     if (card.examples.length !== 2) out.push(`examples: ${card.examples.length}`);
     if (/^(here|in this sentence)/i.test(card.meaning)) out.push('meaning retells the sentence');
     if (words(card.arabic) > 25) out.push(`Arabic is long (${words(card.arabic)} words)`);
+    if (!card.ipaUk || !card.ipaUs) out.push('missing IPA');
   } else {
     if (e.plain === 'none' && card.plainEnglish) out.push(`unexpected plain English: ${card.plainEnglish}`);
     if (e.keyExpr === 'none' && card.keyExpressions.length) out.push(`unexpected key expressions: ${card.keyExpressions.map((k) => k.expression).join(', ')}`);
@@ -143,6 +144,7 @@ function cardMarkdown(card: Card): string {
   if (card.kind === 'word') {
     return [
       `**${card.headword}** · ${card.partOfSpeech} · unit ${JSON.stringify(card.unitIndices)}`,
+      `- ipa: UK /${card.ipaUk ?? ''}/ · US /${card.ipaUs ?? ''}/`,
       `- meaning: ${card.meaning}`,
       `- arabic: ${card.arabic}`,
       `- notes: ${card.notes.length ? card.notes.join(' | ') : '(none)'}`,

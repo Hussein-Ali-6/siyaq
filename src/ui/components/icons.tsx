@@ -42,3 +42,17 @@ export const ExternalIcon = ({ className = 'h-3.5 w-3.5' }: IconProps) => (
     <path d="M9 3h4v4M13 3L7 9M11 9v4H3V5h4" />
   </svg>
 );
+
+export const SpeakerIcon = ({ className = 'h-4 w-4' }: IconProps) => (
+  <svg viewBox="0 0 16 16" className={className} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M2.5 6h2.5l3.5-3v10l-3.5-3h-2.5z" />
+    <path d="M10.8 5.6a3.4 3.4 0 0 1 0 4.8M12.6 3.8a6 6 0 0 1 0 8.4" />
+  </svg>
+);
+
+export const VideoIcon = ({ className = 'h-4 w-4' }: IconProps) => (
+  <svg viewBox="0 0 16 16" className={className} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" aria-hidden="true">
+    <rect x="1.8" y="3.5" width="12.4" height="9" rx="2.2" />
+    <path d="M6.6 6.1v3.8L9.9 8z" fill="currentColor" />
+  </svg>
+);

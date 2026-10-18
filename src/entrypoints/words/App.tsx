@@ -5,6 +5,9 @@ import type { SavedItem } from '@/lib/types';
 import { ArabicMeaning, SentenceText } from '@/ui/card/DictionaryView';
 import { Arabic } from '@/ui/components/Arabic';
 import { ExternalIcon, TrashIcon } from '@/ui/components/icons';
+import { LookupLinks } from '@/ui/components/LookupLinks';
+import { Pronunciation } from '@/ui/components/Pronunciation';
+import { SpeakButton } from '@/ui/components/SpeakButton';
 import { useTheme } from '@/ui/components/useTheme';
 
 type Filter = 'all' | 'word' | 'sentence';
@@ -99,6 +102,7 @@ export function App() {
                         <span className="text-[17px] font-semibold text-amber">{item.card.headword}</span>
                         <span className="text-[12px] text-muted">{item.card.partOfSpeech}</span>
                       </div>
+                      <Pronunciation text={item.card.headword} ipaUk={item.card.ipaUk} ipaUs={item.card.ipaUs} />
                       <p className="text-[14px]">{item.card.meaning}</p>
                       <ArabicMeaning card={item.card} />
                       <p className="whitespace-pre-wrap rounded-xl bg-surface-2 p-3 text-[13px] leading-relaxed">
@@ -109,6 +113,10 @@ export function App() {
                   ) : (
                     <>
                       <p className="whitespace-pre-wrap text-[13.5px] leading-relaxed">{item.selection}</p>
+                      <div className="flex items-center gap-1">
+                        <SpeakButton text={item.selection} accent="uk" label="UK" />
+                        <SpeakButton text={item.selection} accent="us" label="US" />
+                      </div>
                       <Arabic className="whitespace-pre-wrap text-[14px]">{item.card.arabic}</Arabic>
                     </>
                   )}
@@ -117,6 +125,7 @@ export function App() {
                       <ExternalIcon /> <span className="max-w-[320px] truncate">{item.pageTitle || item.url}</span>
                     </a>
                     <span>{new Date(item.savedAt).toLocaleDateString()}</span>
+                    {item.card.kind === 'word' && <LookupLinks headword={item.card.headword} />}
                   </p>
                 </div>
                 <button type="button" onClick={() => void removeSaved(item.id)} title="Delete" aria-label="Delete" className="rounded-md p-1.5 text-faint hover:bg-surface-2 hover:text-danger">

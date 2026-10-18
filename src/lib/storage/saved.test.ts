@@ -13,6 +13,8 @@ function wordItem(id: string, headword: string, arabic: string): Omit<SavedItem,
       kind: 'word',
       headword,
       partOfSpeech: 'verb',
+      ipaUk: 'tɛst',
+      ipaUs: 'test',
       unitIndices: [1],
       meaning: `to ${headword} something`,
       arabic,
@@ -93,7 +95,8 @@ describe('export', () => {
     ];
     const csv = toCsv(items);
     const lines = csv.split('\n');
-    expect(lines[0]).toBe('kind,headword,arabic,meaning,sentence,translation,page,url,saved');
+    expect(lines[0]).toBe('kind,headword,ipa_uk,ipa_us,arabic,meaning,sentence,translation,page,url,saved');
+    expect(lines[1]).toContain(',tɛst,test,');
     expect(lines[1]).toContain('قال — شرح قال');
     expect(lines[1]).toContain('"say ""hi"""');
     expect(lines[1]).toContain('2026-10-16');

@@ -2,6 +2,7 @@ import type { DictionaryCard, Segment } from '@/lib/types';
 import { Arabic } from '@/ui/components/Arabic';
 import { BlurReveal } from '@/ui/components/BlurReveal';
 import { Collapsible } from '@/ui/components/Collapsible';
+import { Pronunciation } from '@/ui/components/Pronunciation';
 
 export function SentenceText({ segments, sentence }: { segments?: Segment[]; sentence?: string }) {
   if (segments && segments.length) {
@@ -36,6 +37,7 @@ export function DictionaryView({ card, segments, sentence }: { card: DictionaryC
   return (
     <div className="space-y-4">
       <div className="space-y-1.5">
+        <Pronunciation text={card.headword} ipaUk={card.ipaUk} ipaUs={card.ipaUs} />
         <p className="text-[15px] leading-snug">{card.meaning}</p>
         <ArabicMeaning card={card} />
       </div>

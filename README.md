@@ -17,6 +17,9 @@ the article, not just the word.
   translation blurred until clicked, two examples, "Common combinations" only for words with strong
   partners, other meanings collapsed, and ★ Save. The Arabic is the usual equivalent, with a few words of
   clarification when a single Arabic word would mislead, for example because it has several meanings.
+- **Pronunciation.** Word cards show British and American IPA, each with a speaker button that reads the
+  word in Chrome's Google voices, plus links that open the word on YouGlish (real videos) and in Oxford
+  Learner's Dictionaries. Translation cards have UK and US speakers for the selected text.
 - **Translation card** (a sentence or longer): a natural Arabic translation, plainer English only when
   the original is hard, and at most three "Key expressions" that open their own dictionary card.
 - **Context sent with every request:** page title and site, the article summary once it exists, the
@@ -92,5 +95,6 @@ retold meanings, plain English on clear sentences). Tune `src/lib/claude/prompts
 
 Nothing leaves the browser until you click the icon. Each request sends the page title, the paragraph
 around the selection, the selection, and the article summary (once it exists) to the Anthropic API with
-your key. The console only ever shows event names, error codes, status codes and counts, never page
+your key. Pressing a speaker sends that word or sentence to Google's voice service, and the YouGlish and
+Oxford links send the word to those sites, only when you click them. The console only ever shows event names, error codes, status codes and counts, never page
 text or answers.

@@ -4,6 +4,7 @@ import { HOST_TAG } from '@/lib/dom/blocks';
 import { clearHighlight, setHighlight } from '@/lib/dom/highlight';
 import { buildLookupRequest, readSelection, type BuiltRequest, type SelectionInfo } from '@/lib/dom/selection';
 import { log } from '@/lib/log';
+import { stopSpeaking } from '@/lib/speech';
 import { onMessage, sendMessage } from '@/lib/messaging';
 import { sentenceSegments } from '@/lib/text/tokens';
 import { normalizeWhitespace } from '@/lib/text/words';
@@ -66,6 +67,7 @@ export class SiyaqController {
     this.ui.host.addEventListener('keydown', (e) => this.onKeyDown(e));
     onMessage('extractArticle', () => extractArticle(document));
     ctx.onInvalidated(() => {
+      stopSpeaking();
       clearHighlight();
       this.ui.destroy();
     });
@@ -236,6 +238,7 @@ export class SiyaqController {
   private back(): void {
     const card = this.state.card;
     if (!card || card.stack.length < 2) return;
+    stopSpeaking();
     const removed = card.stack.pop()!;
     this.contexts.delete(removed.key);
     const top = this.topEntry();
@@ -250,6 +253,7 @@ export class SiyaqController {
     this.state.icon = null;
     this.pending = null;
     this.contexts.clear();
+    stopSpeaking();
     clearHighlight();
     this.render();
   }

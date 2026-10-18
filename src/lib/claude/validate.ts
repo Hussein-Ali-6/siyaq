@@ -16,6 +16,12 @@ const trimmed = z.string().transform((s) => s.trim());
 const nonEmpty = trimmed.pipe(z.string().min(1));
 const arabic = nonEmpty.refine((s) => ARABIC.test(s), { message: 'must contain Arabic script' });
 const optionalString = trimmed.catch('');
+/** IPA without surrounding slashes or brackets; anything missing or implausibly long becomes empty. */
+const ipa = z.unknown().optional().transform((v) => {
+  if (typeof v !== 'string') return '';
+  const s = v.trim().replace(/^[/[\s]+|[/\]\s]+$/g, '');
+  return s.length > 80 ? '' : s;
+});
 
 /** A list of strings, blanks removed, trimmed to `max`. Anything that is not a list becomes empty. */
 const stringList = (max: number) =>
@@ -34,6 +40,8 @@ const otherMeaningSchema = z.object({ meaning: nonEmpty, arabic });
 const dictionarySchema = z.object({
   headword: nonEmpty,
   partOfSpeech: optionalString,
+  ipaUk: ipa,
+  ipaUs: ipa,
   unitIndices: z.unknown(),
   meaning: nonEmpty,
   arabic,

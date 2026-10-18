@@ -128,7 +128,7 @@ export function App() {
 
       <section className="space-y-2 text-[12.5px] text-muted">
         <h2 className="text-[13px] font-semibold text-text">Privacy</h2>
-        <p>Nothing leaves the browser until you click the Siyaq icon next to a selection. Each request sends the page title, the paragraph around the selection, the selection, and the article summary once it exists, to the Anthropic API with your key. Nothing is logged except error codes.</p>
+        <p>Nothing leaves the browser until you click the Siyaq icon next to a selection. Each request sends the page title, the paragraph around the selection, the selection, and the article summary once it exists, to the Anthropic API with your key. A speaker button sends that word or sentence to Google's voice service, and the YouGlish and Oxford links send the word to those sites, only when you click them. Nothing is logged except error codes.</p>
       </section>
     </main>
   );

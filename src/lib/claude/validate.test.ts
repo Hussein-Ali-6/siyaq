@@ -8,6 +8,8 @@ const passage = buildSentencePassage('Before. They turned the offer down. After.
 const good = {
   headword: 'turn down',
   partOfSpeech: 'phrasal verb',
+  ipaUk: 'ˌtɜːn ˈdaʊn',
+  ipaUs: 'ˌtɝːn ˈdaʊn',
   unitIndices: [3, 6],
   meaning: 'To refuse an offer or request.',
   arabic: 'رفض',
@@ -91,6 +93,25 @@ describe('validateDictionary', () => {
     const r = validateDictionary({ ...good, arabic }, passage, [3]);
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.card.arabic).toBe(arabic);
+  });
+
+  it('keeps the British and American IPA without surrounding slashes or brackets', () => {
+    const r = validateDictionary({ ...good, ipaUk: ' /ˌtɜːn ˈdaʊn/ ', ipaUs: '[ˌtɝːn ˈdaʊn]' }, passage, [3]);
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.card.ipaUk).toBe('ˌtɜːn ˈdaʊn');
+      expect(r.card.ipaUs).toBe('ˌtɝːn ˈdaʊn');
+    }
+  });
+
+  it('treats a missing or implausibly long IPA as empty instead of rejecting the card', () => {
+    const { ipaUk: _uk, ...noUk } = good;
+    const r = validateDictionary({ ...noUk, ipaUs: 'x'.repeat(120) }, passage, [3]);
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.card.ipaUk).toBe('');
+      expect(r.card.ipaUs).toBe('');
+    }
   });
 
   it('rejects an empty Arabic field', () => {

@@ -17,6 +17,8 @@ export const DICTIONARY_SCHEMA: JsonSchema = object({
   unitIndices: intList,
   headword: str,
   partOfSpeech: str,
+  ipaUk: str,
+  ipaUs: str,
   meaning: str,
   arabic: str,
   notes: strList,

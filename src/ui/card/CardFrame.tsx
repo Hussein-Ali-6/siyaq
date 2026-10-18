@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { BackIcon, BookIcon, CloseIcon, StarIcon } from '@/ui/components/icons';
+import { LookupLinks } from '@/ui/components/LookupLinks';
 import { DictionaryView } from './DictionaryView';
 import { ErrorView } from './ErrorView';
 import { LoadingView } from './LoadingView';
@@ -103,7 +104,8 @@ export function CardFrame({ state, actions }: { state: CardState; actions: CardA
       </div>
 
       {ready && !card.showSummary && (
-        <footer className="flex items-center justify-between border-t border-border px-4 py-2">
+        <footer className="flex items-center justify-between border-t border-border px-3 py-1.5">
+          <span className="inline-flex items-center">
           <button
             type="button"
             onClick={actions.toggleSave}
@@ -113,7 +115,9 @@ export function CardFrame({ state, actions }: { state: CardState; actions: CardA
             <StarIcon filled={entry.saved} />
             {entry.saved ? 'Saved' : 'Save'}
           </button>
-          <span className="text-[11px] text-faint">Claude · Sonnet 5.5</span>
+          {entry.card?.kind === 'word' && <LookupLinks headword={entry.card.headword} />}
+          </span>
+          <span className="text-[11px] text-faint">Sonnet 5.5</span>
         </footer>
       )}
     </div>

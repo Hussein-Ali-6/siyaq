@@ -14,6 +14,7 @@
   --color-amber-soft: rgba(242, 179, 61, 0.14);
   --color-danger: #f0776c;
   --font-sans: ui-sans-serif, -apple-system, "SF Pro Text", "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-ipa: "Charis SIL", "Doulos SIL", "Gentium Plus", "Lucida Grande", "Segoe UI", "Arial Unicode MS", ui-sans-serif, sans-serif;
   --font-arabic: "Noto Naskh Arabic", "Noto Sans Arabic", "Geeza Pro", "Al Nile", "Baghdad", "Sakkal Majalla", "Segoe UI", Tahoma, Arial, sans-serif;
   --shadow-card: 0 18px 50px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.35);
 }

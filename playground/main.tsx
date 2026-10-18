@@ -7,6 +7,8 @@ const dictionary: DictionaryCard = {
   kind: 'word',
   headword: 'turn down',
   partOfSpeech: 'phrasal verb',
+  ipaUk: 'ˌtɜːn ˈdaʊn',
+  ipaUs: 'ˌtɝːn ˈdaʊn',
   unitIndices: [11, 14],
   meaning: 'to refuse an offer, request or proposal',
   arabic: 'رفض',

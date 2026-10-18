@@ -50,6 +50,9 @@ export interface DictionaryCard {
   kind: 'word';
   headword: string;
   partOfSpeech: string;
+  /** British and American IPA without slashes; empty when unknown, missing on cards saved before 2026-10-18. */
+  ipaUk?: string;
+  ipaUs?: string;
   /** Indices of the unit's words in the passage, verified against the request. */
   unitIndices: number[];
   meaning: string;

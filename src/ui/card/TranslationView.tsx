@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { TranslationCard } from '@/lib/types';
 import { Arabic } from '@/ui/components/Arabic';
+import { SpeakButton } from '@/ui/components/SpeakButton';
 
 export function TranslationView({
   card,
@@ -17,11 +18,15 @@ export function TranslationView({
     <div className="space-y-4">
       <div>
         <p className={`whitespace-pre-wrap text-[13px] leading-relaxed text-muted ${expanded ? '' : 'line-clamp-3'}`}>{selection}</p>
-        {long && (
-          <button type="button" onClick={() => setExpanded((e) => !e)} className="mt-1 text-[12px] font-medium text-amber hover:text-amber-strong">
-            {expanded ? 'Show less' : 'Show all'}
-          </button>
-        )}
+        <div className="mt-1 flex items-center gap-1">
+          {long && (
+            <button type="button" onClick={() => setExpanded((e) => !e)} className="mr-2 text-[12px] font-medium text-amber hover:text-amber-strong">
+              {expanded ? 'Show less' : 'Show all'}
+            </button>
+          )}
+          <SpeakButton text={selection} accent="uk" label="UK" />
+          <SpeakButton text={selection} accent="us" label="US" />
+        </div>
       </div>
 
       <Arabic className="whitespace-pre-wrap text-[15px]">{card.arabic}</Arabic>
