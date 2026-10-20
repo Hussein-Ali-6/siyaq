@@ -169,12 +169,17 @@ export const isTerminalRefreshError = (code: string) => TERMINAL_REFRESH.has(cod
 
 /** Posts a form to the token endpoint and returns the parsed JSON, or throws with the OAuth error code. */
 export async function postToken(body: URLSearchParams, fetchFn: typeof fetch = fetch): Promise<unknown> {
-  const res = await fetchFn(CHATGPT_TOKEN_URL, {
-    method: 'POST',
-    headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' },
-    body,
-    redirect: 'error',
-  });
+  let res: Response;
+  try {
+    res = await fetchFn(CHATGPT_TOKEN_URL, {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' },
+      body,
+      redirect: 'error',
+    });
+  } catch {
+    throw Object.assign(new Error("Could not reach OpenAI's sign-in server. Check your connection and that Siyaq may access auth.openai.com."), { oauthCode: 'network' });
+  }
   const data: unknown = await res.json().catch(() => ({}));
   if (!res.ok) {
     const code = typeof data === 'object' && data !== null && typeof (data as { error?: unknown }).error === 'string' ? (data as { error: string }).error : `http_${res.status}`;

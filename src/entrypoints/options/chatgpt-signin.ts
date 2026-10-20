@@ -12,7 +12,22 @@ import {
   tokenRequestBody,
   type CallbackResult,
 } from '@/lib/auth/chatgpt-oauth';
+import { log } from '@/lib/log';
 import { getChatGptAuth, setChatGptAuth } from '@/lib/storage/settings';
+
+/** The last attempt's outcome, kept so it is still visible after a reload. Never holds a code or token. */
+export interface SignInAttempt {
+  at: number;
+  ok: boolean;
+  step: string;
+  detail?: string;
+}
+export const LAST_ATTEMPT_KEY = 'chatgptLastAttempt';
+
+async function record(attempt: Omit<SignInAttempt, 'at'>): Promise<void> {
+  log.info('chatgpt_signin', { code: `${attempt.step}${attempt.detail ? `:${attempt.detail}` : ''}` });
+  await browser.storage.local.set({ [LAST_ATTEMPT_KEY]: { ...attempt, at: Date.now() } });
+}
 
 export type SignInResult = { ok: true; email?: string; planUsage: boolean } | { ok: false; message: string };
 
@@ -75,6 +90,7 @@ export class ChatGptSignIn {
 
     const settingsTab = await browser.tabs.getCurrent();
     const tab = await browser.tabs.create({ url, active: true });
+    await record({ ok: true, step: 'tab_opened' });
     const cleanups: Array<() => void> = [];
     const result = await new Promise<CallbackResult>((resolve) => {
       let done = false;
@@ -83,11 +99,12 @@ export class ChatGptSignIn {
         done = true;
         resolve(r);
       };
-      const onUpdated = (tabId: number, change: { url?: string }, t: { url?: string }) => {
+      const onUpdated = (tabId: number, change: { url?: string }, t: { url?: string; pendingUrl?: string }) => {
         if (tabId !== tab.id || !this.expected) return;
-        const address = change.url ?? t.url;
-        const r = address ? parseCallbackUrl(address, this.expected) : null;
-        if (r) this.settle?.(r);
+        for (const address of [change.url, t.pendingUrl, t.url]) {
+          const r = address ? parseCallbackUrl(address, this.expected) : null;
+          if (r) return this.settle?.(r);
+        }
       };
       const onRemoved = (tabId: number) => {
         if (tabId === tab.id) this.settle?.({ ok: false, error: 'closed' });
@@ -106,23 +123,40 @@ export class ChatGptSignIn {
     if (tab.id !== undefined) await browser.tabs.remove(tab.id).catch(() => undefined);
     if (settingsTab?.id !== undefined) await browser.tabs.update(settingsTab.id, { active: true }).catch(() => undefined);
 
-    if (!result.ok) return { ok: false, message: MESSAGES[result.error] ?? `Sign-in failed (${result.error}).` };
+    if (!result.ok) {
+      await record({ ok: false, step: 'callback', detail: result.error });
+      return { ok: false, message: MESSAGES[result.error] ?? `Sign-in failed (${result.error}).` };
+    }
+    await record({ ok: true, step: 'callback_received' });
 
     // Keep the issued client before exchanging, so a later sign-in reuses this registration.
     auth = { ...auth, clientId: result.clientId };
     await setChatGptAuth(auth);
+    let data: unknown;
     try {
-      const data = await postToken(tokenRequestBody({ code: result.code, verifier, redirectUri, clientId: result.clientId }));
-      const tokens = parseTokenResponse(data, Date.now(), { nonce });
-      await setChatGptAuth({ ...auth, ...tokens });
-      return { ok: true, email: tokens.email, planUsage: hasPlanUsage(tokens.scopes) };
+      data = await postToken(tokenRequestBody({ code: result.code, verifier, redirectUri, clientId: result.clientId }));
     } catch (err) {
-      // A rejected client means this registration is unusable; forget it so the next sign-in registers again.
-      if ((err as { oauthCode?: string }).oauthCode === 'invalid_client') {
+      const code = (err as { oauthCode?: string }).oauthCode ?? 'unknown';
+      const status = (err as { status?: number }).status;
+      await record({ ok: false, step: 'exchange', detail: status ? `${status} ${code}` : code });
+      if (code === 'invalid_client') {
+        // A rejected client means this registration is unusable; forget it so the next sign-in registers again.
         const { clientId: _dropped, ...rest } = auth;
         await setChatGptAuth(rest);
       }
-      return { ok: false, message: err instanceof Error ? err.message : 'Sign-in failed.' };
+      const message = err instanceof Error ? err.message : 'Sign-in failed.';
+      return { ok: false, message: `Signing in reached OpenAI, but exchanging the sign-in code failed: ${message}` };
+    }
+    try {
+      const tokens = parseTokenResponse(data, Date.now(), { nonce });
+      await setChatGptAuth({ ...auth, ...tokens });
+      const planUsage = hasPlanUsage(tokens.scopes);
+      await record({ ok: true, step: 'signed_in', detail: planUsage ? 'plan_usage' : 'no_plan_usage' });
+      return { ok: true, email: tokens.email, planUsage };
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : 'unknown';
+      await record({ ok: false, step: 'token_response', detail: detail.slice(0, 80) });
+      return { ok: false, message: `OpenAI returned tokens Siyaq could not use: ${detail}` };
     }
   }
 }

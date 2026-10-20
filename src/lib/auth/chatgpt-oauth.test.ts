@@ -8,6 +8,7 @@ import {
   parseCallbackUrl,
   parseTokenResponse,
   pkceChallenge,
+  postToken,
   redirectUriFor,
   refreshRequestBody,
   tokenRequestBody,
@@ -141,5 +142,19 @@ describe('helpers', () => {
       expect(isTerminalRefreshError(code)).toBe(true);
     }
     expect(isTerminalRefreshError('server_error')).toBe(false);
+  });
+});
+
+describe('postToken', () => {
+  it('reports the OAuth error code and HTTP status', async () => {
+    const fetchFn = (async () => new Response(JSON.stringify({ error: 'invalid_grant' }), { status: 400 })) as unknown as typeof fetch;
+    await expect(postToken(new URLSearchParams(), fetchFn)).rejects.toMatchObject({ oauthCode: 'invalid_grant', status: 400 });
+  });
+
+  it('names an unreachable server instead of a bare "Failed to fetch"', async () => {
+    const fetchFn = (async () => { throw new TypeError('Failed to fetch'); }) as unknown as typeof fetch;
+    const err = (await postToken(new URLSearchParams(), fetchFn).catch((e: unknown) => e)) as Error;
+    expect(err).toMatchObject({ oauthCode: 'network' });
+    expect(err.message).toMatch(/could not reach openai/i);
   });
 });

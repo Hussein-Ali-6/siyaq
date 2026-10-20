@@ -5,7 +5,7 @@ import { sendMessage } from '@/lib/messaging';
 import { PROVIDERS, providerInfo } from '@/lib/llm/providers';
 import type { ProviderId, Thinking } from '@/lib/llm/types';
 import { clearChatGptTokens, getProviderKey, setActiveProvider, setProviderKey, setProviderSettings } from '@/lib/storage/settings';
-import { ChatGptSignIn } from './chatgpt-signin';
+import { ChatGptSignIn, LAST_ATTEMPT_KEY, type SignInAttempt } from './chatgpt-signin';
 import { ModelPicker } from './ModelPicker';
 import { statusLabel, useProviders, type ProviderView } from './useProviders';
 
@@ -183,35 +183,57 @@ function KeyForm({ view, onNote }: { view: ProviderView; onNote: (n: Note) => vo
   );
 }
 
+/** The sign-in result, shown in the Account block itself so it cannot be missed. */
+function Outcome({ note }: { note: Note }) {
+  if (!note) return null;
+  return (
+    <p role="status" className={`rounded-lg border px-3 py-2 text-[13px] ${note.ok ? 'border-amber/50 bg-amber-soft text-text' : 'border-danger/60 bg-danger/10 text-text'}`}>
+      {note.text}
+    </p>
+  );
+}
+
 function ChatGptPanel({ view, onNote }: { view: ProviderView; onNote: (n: Note) => void }) {
   const flow = useRef<ChatGptSignIn | null>(null);
   const [waiting, setWaiting] = useState(false);
   const [pasted, setPasted] = useState('');
   const [welcome, setWelcome] = useState(false);
+  const [outcome, setOutcome] = useState<Note>(null);
+
+  // After a reload, still say how the last attempt ended if it failed.
+  useEffect(() => {
+    void browser.storage.local.get(LAST_ATTEMPT_KEY).then((r) => {
+      const last = r[LAST_ATTEMPT_KEY] as SignInAttempt | undefined;
+      if (last && !last.ok && !view.hasCredential) {
+        setOutcome({ ok: false, text: `The last sign-in attempt (${new Date(last.at).toLocaleString()}) stopped at "${last.step}"${last.detail ? ` (${last.detail})` : ''}.` });
+      }
+    });
+  }, [view.hasCredential]);
 
   const signIn = async () => {
     const access = requestAccess('chatgpt', { permissions: ['tabs'] });
     if (!(await access)) {
-      onNote({ ok: false, text: 'Siyaq needs these permissions to sign in with ChatGPT.' });
+      setOutcome({ ok: false, text: 'Siyaq needs these permissions to sign in with ChatGPT.' });
       return;
     }
     flow.current = new ChatGptSignIn();
     setWaiting(true);
+    setOutcome(null);
     onNote(null);
     const res = await flow.current.run();
     setWaiting(false);
     flow.current = null;
     if (!res.ok) {
-      onNote({ ok: false, text: res.message });
+      setOutcome({ ok: false, text: res.message });
       return;
     }
     if (res.planUsage) setWelcome(true);
-    onNote(res.planUsage ? { ok: true, text: `Signed in${res.email ? ` as ${res.email}` : ''}.` } : { ok: false, text: 'Signed in, but ChatGPT plan usage was not allowed. Sign in again and allow it to use your plan.' });
+    setOutcome(res.planUsage ? { ok: true, text: `Signed in${res.email ? ` as ${res.email}` : ''}.` } : { ok: false, text: 'Signed in, but ChatGPT plan usage was not allowed. Sign in again and allow it to use your plan.' });
   };
 
   const signOut = async () => {
     await clearChatGptTokens();
-    onNote({ ok: true, text: 'Signed out of ChatGPT.' });
+    setOutcome({ ok: true, text: 'Signed out of ChatGPT.' });
   };
 
   if (view.hasCredential && !waiting) {
@@ -227,6 +249,7 @@ function ChatGptPanel({ view, onNote }: { view: ProviderView; onNote: (n: Note) 
             </button>
           </div>
         )}
+        <Outcome note={outcome} />
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-[13px]">
             Signed in{view.email ? ' as ' : ''}
@@ -264,7 +287,7 @@ function ChatGptPanel({ view, onNote }: { view: ProviderView; onNote: (n: Note) 
             className="flex gap-2"
             onSubmit={(e) => {
               e.preventDefault();
-              if (!flow.current?.submitAddress(pasted)) onNote({ ok: false, text: "That doesn't look like the sign-in result address." });
+              if (!flow.current?.submitAddress(pasted)) setOutcome({ ok: false, text: "That doesn't look like the sign-in result address. It starts with http://127.0.0.1." });
               setPasted('');
             }}
           >
@@ -282,6 +305,7 @@ function ChatGptPanel({ view, onNote }: { view: ProviderView; onNote: (n: Note) 
           Continue with ChatGPT
         </button>
       )}
+      <Outcome note={outcome} />
     </div>
   );
 }
