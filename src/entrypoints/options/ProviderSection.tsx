@@ -26,13 +26,28 @@ function requestAccess(provider: ProviderId, extra: chrome.permissions.Permissio
 export function ProviderSection() {
   const { views, active } = useProviders();
   const [selected, setSelected] = useState<ProviderId | null>(null);
+  const [switched, setSwitched] = useState<string | null>(null);
   const current = selected ?? active;
+
+  // If the active provider is not set up but another is ready (say, you just signed in to ChatGPT),
+  // make the ready one active instead of leaving lookups pointed at nothing.
+  useEffect(() => {
+    if (!views || views[active].ready) return;
+    const ready = (selected && views[selected].ready ? selected : null) ?? PROVIDERS.find((p) => views[p.id].ready)?.id;
+    if (!ready) return;
+    void setActiveProvider(ready).then(() => setSwitched(`Lookups now use ${providerInfo(ready).name}, because ${providerInfo(active).name} isn't set up.`));
+  }, [views, active, selected]);
 
   if (!views) return <p className="text-[13px] text-muted">Loading…</p>;
   const view = views[current];
 
   return (
     <div className="space-y-4">
+      {switched && (
+        <p role="status" className="rounded-lg border border-amber/50 bg-amber-soft px-3 py-2 text-[13px]">
+          {switched}
+        </p>
+      )}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
         {PROVIDERS.map((p) => {
           const status = statusLabel(views[p.id], p.id === active);

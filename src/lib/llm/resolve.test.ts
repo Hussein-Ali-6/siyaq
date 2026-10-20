@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
-import { createChatGptTokenSource, resolveClient } from '@/lib/llm/resolve';
-import { getChatGptAuth, setChatGptAuth, setProviderKey, setProviderSettings } from '@/lib/storage/settings';
+import { createChatGptTokenSource, resolveActiveClient, resolveClient } from '@/lib/llm/resolve';
+import { getChatGptAuth, setActiveProvider, setChatGptAuth, setProviderKey, setProviderSettings } from '@/lib/storage/settings';
 
 beforeEach(() => fakeBrowser.reset());
 
@@ -79,5 +79,28 @@ describe('resolveClient', () => {
     await setProviderSettings('chatgpt', { model: 'gpt-6.1-sol' });
     r = await resolveClient('chatgpt');
     expect('error' in r && r.error.code).toBe('not_eligible');
+  });
+});
+
+describe('resolveActiveClient', () => {
+  it('uses a ready provider when the active one is not set up, as in a fresh profile signed in to ChatGPT', async () => {
+    await setChatGptAuth(signedIn(Date.now() + 3_600_000));
+    await setProviderSettings('chatgpt', { model: 'gpt-6.1-sol' });
+    const r = await resolveActiveClient();
+    expect('client' in r && r.provider).toBe('chatgpt');
+  });
+
+  it('keeps the active provider when it is ready', async () => {
+    await setProviderKey('anthropic', 'sk-ant-test');
+    await setChatGptAuth(signedIn(Date.now() + 3_600_000));
+    await setProviderSettings('chatgpt', { model: 'gpt-6.1-sol' });
+    await setActiveProvider('anthropic');
+    const r = await resolveActiveClient();
+    expect('client' in r && r.provider).toBe('anthropic');
+  });
+
+  it("reports the active provider's problem when no provider is ready", async () => {
+    const r = await resolveActiveClient();
+    expect('error' in r && r.error.message).toMatch(/Anthropic/);
   });
 });

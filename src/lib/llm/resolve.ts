@@ -3,7 +3,7 @@ import { isTerminalRefreshError, needsRefresh, parseTokenResponse, postToken, re
 import { createAiSdkClient } from '@/lib/llm/aisdk';
 import { createAnthropicClient } from '@/lib/llm/anthropic';
 import { createChatGptClient } from '@/lib/llm/chatgpt';
-import { providerInfo } from '@/lib/llm/providers';
+import { PROVIDER_IDS, providerInfo } from '@/lib/llm/providers';
 import { LlmError, type LlmClient, type ProviderId } from '@/lib/llm/types';
 import { clearChatGptTokens, getActiveProvider, getChatGptAuth, getProviderKey, getProviderSettings, setChatGptAuth } from '@/lib/storage/settings';
 import type { UserError } from '@/lib/types';
@@ -111,6 +111,19 @@ export async function resolveClient(provider: ProviderId): Promise<ResolvedClien
   return { client, provider, model: settings.model, modelId: `${provider}:${settings.model}` };
 }
 
-export async function resolveActiveClient(): Promise<ResolvedClient | { error: UserError }> {
-  return resolveClient(await getActiveProvider());
+/**
+ * The client for the active provider. If that provider is not set up but another one is ready (for
+ * example a fresh profile where the reader only signed in to ChatGPT), lookups use the ready one
+ * rather than failing; the card footer shows which provider answered.
+ */
+export async function resolveActiveClient(): Promise<ResolvedClient | { error: UserError; provider: ProviderId }> {
+  const active = await getActiveProvider();
+  const resolved = await resolveClient(active);
+  if (!('error' in resolved)) return resolved;
+  for (const provider of PROVIDER_IDS) {
+    if (provider === active) continue;
+    const alternative = await resolveClient(provider);
+    if (!('error' in alternative)) return alternative;
+  }
+  return { error: resolved.error, provider: active };
 }

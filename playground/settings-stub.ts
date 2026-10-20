@@ -1,6 +1,7 @@
 /**
  * An in-memory stand-in for the extension APIs, so the real settings page can be viewed in the
- * playground. Scenario from the URL hash: #fresh (nothing set up), #chatgpt (signed in), default
+ * playground. Scenario from the URL hash: #fresh (nothing set up), #chatgpt (signed in and active),
+ * #chatgpt-only (signed in, no Anthropic key, nothing chosen), default
  * (Anthropic key saved and active).
  */
 type Listener = (...args: unknown[]) => void;
@@ -11,18 +12,18 @@ const events = () => {
 
 const scenario = location.hash.slice(1);
 const store: Record<string, unknown> = {};
-if (scenario !== 'fresh') {
+if (scenario !== 'fresh' && scenario !== 'chatgpt-only') {
   store.apiKey = 'sk-ant-playground';
 }
-if (scenario === 'chatgpt') {
-  store.activeProvider = 'chatgpt';
+if (scenario === 'chatgpt' || scenario === 'chatgpt-only') {
+  if (scenario === 'chatgpt') store.activeProvider = 'chatgpt';
   store.chatgpt = { clientId: 'client_x', hostId: 'urn:uuid:x', port: 51234, accessToken: 'at', refreshToken: 'rt', expiresAt: Date.now() + 3_600_000, scopes: ['openid', 'chatgpt.tokens.use.direct'], email: 'reader@example.com' };
   store.providerSettings = { chatgpt: { model: 'gpt-6.1-sol', thinking: 'medium' } };
 }
 store['cache:a'] = { v: {}, at: 1 };
 store['summary:b'] = { v: {}, at: 1 };
 
-const granted = new Set<string>(['https://api.anthropic.com/*', ...(scenario === 'chatgpt' ? ['https://auth.openai.com/*', 'https://api.openai.com/*'] : [])]);
+const granted = new Set<string>(['https://api.anthropic.com/*', ...(scenario.startsWith('chatgpt') ? ['https://auth.openai.com/*', 'https://api.openai.com/*'] : [])]);
 const onChanged = events();
 const onAdded = events();
 

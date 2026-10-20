@@ -17,7 +17,7 @@ import {
   trimCaches,
 } from '@/lib/storage/cache';
 import { isSaved, removeSaved, saveItem } from '@/lib/storage/saved';
-import { getActiveProvider, getPrefs, getProviderSettings } from '@/lib/storage/settings';
+import { getPrefs, getProviderSettings } from '@/lib/storage/settings';
 import type { Card } from '@/lib/types';
 
 export default defineBackground(() => {
@@ -58,13 +58,12 @@ export default defineBackground(() => {
   onMessage('getPrefs', () => getPrefs());
 
   onMessage('getStatus', async () => {
-    const provider = await getActiveProvider();
-    const { model } = await getProviderSettings(provider);
-    const r = await resolveClient(provider);
+    const r = await resolveActiveClient();
+    const provider = r.provider;
     return {
       provider,
       providerName: providerInfo(provider).name,
-      model,
+      model: 'error' in r ? (await getProviderSettings(provider)).model : r.model,
       ready: !('error' in r),
       ...('error' in r ? { problem: r.error.message } : {}),
     };
