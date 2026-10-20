@@ -1,6 +1,16 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import { BackIcon, BookIcon, CloseIcon, StarIcon } from '@/ui/components/icons';
 import { LookupLinks } from '@/ui/components/LookupLinks';
+import { isProviderId, providerInfo } from '@/lib/llm/providers';
+
+/** "openai:gpt-6.1-mini" → "OpenAI · gpt-6.1-mini"; ChatGPT shows that it uses the plan. */
+function modelLabel(modelId: string): string {
+  const i = modelId.indexOf(':');
+  const provider = modelId.slice(0, i);
+  const model = modelId.slice(i + 1);
+  if (!isProviderId(provider)) return model;
+  return provider === 'chatgpt' ? `ChatGPT plan · ${model}` : `${providerInfo(provider).name} · ${model}`;
+}
 import { DictionaryView } from './DictionaryView';
 import { ErrorView } from './ErrorView';
 import { LoadingView } from './LoadingView';
@@ -117,7 +127,11 @@ export function CardFrame({ state, actions }: { state: CardState; actions: CardA
           </button>
           {entry.card?.kind === 'word' && <LookupLinks headword={entry.card.headword} />}
           </span>
-          <span className="text-[11px] text-faint">Sonnet 5.5</span>
+          {entry.model && (
+            <span className="max-w-[45%] truncate text-[11px] text-faint" title={modelLabel(entry.model)}>
+              {modelLabel(entry.model)}
+            </span>
+          )}
         </footer>
       )}
     </div>

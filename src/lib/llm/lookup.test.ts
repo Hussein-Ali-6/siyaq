@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildWordPassage } from '@/lib/text/tokens';
-import { performLookup, type LookupDeps } from '@/lib/claude/lookup';
-import { ClaudeError } from '@/lib/claude/client';
+import { cacheKeyFor, performLookup, type LookupDeps } from '@/lib/llm/lookup';
+import { LlmError } from '@/lib/llm/types';
 import type { Card, LookupRequest } from '@/lib/types';
 
 const page = { url: 'https://example.com/a', title: 'A title', siteName: 'Example' };
@@ -47,9 +47,18 @@ function fakeDeps(answers: Array<unknown | Error>): LookupDeps & { calls: number
     },
     getSummary: async () => null,
     retryDelayMs: 0,
+    modelId: 'anthropic:claude-sonnet-5-5',
   };
   return deps;
 }
+
+describe('cacheKeyFor', () => {
+  it('differs between models so one model never reuses another model\'s answer', async () => {
+    const req = wordRequest();
+    expect(await cacheKeyFor(req, 'anthropic:claude-sonnet-5-5')).not.toBe(await cacheKeyFor(req, 'openai:gpt-x'));
+    expect(await cacheKeyFor(req, 'openai:gpt-x')).toBe(await cacheKeyFor(req, 'openai:gpt-x'));
+  });
+});
 
 describe('performLookup', () => {
   it('returns a validated card and caches it', async () => {
@@ -59,6 +68,7 @@ describe('performLookup', () => {
     if (res.ok) {
       expect(res.cached).toBe(false);
       expect(res.card.kind).toBe('word');
+      expect(res.model).toBe('anthropic:claude-sonnet-5-5');
     }
     expect(deps.calls).toBe(1);
     expect(deps.store.size).toBe(1);
@@ -89,7 +99,7 @@ describe('performLookup', () => {
   });
 
   it('retries once on a retryable API error and then reports it', async () => {
-    const deps = fakeDeps([new ClaudeError('overloaded', 'Overloaded', 529), new ClaudeError('overloaded', 'Overloaded', 529)]);
+    const deps = fakeDeps([new LlmError('overloaded', 'Overloaded', 529), new LlmError('overloaded', 'Overloaded', 529)]);
     const res = await performLookup(wordRequest(), deps);
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.error.code).toBe('overloaded');
@@ -97,7 +107,7 @@ describe('performLookup', () => {
   });
 
   it('does not retry on a bad key', async () => {
-    const deps = fakeDeps([new ClaudeError('bad_key', 'Invalid key', 401)]);
+    const deps = fakeDeps([new LlmError('bad_key', 'Invalid key', 401)]);
     const res = await performLookup(wordRequest(), deps);
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.error.code).toBe('bad_key');

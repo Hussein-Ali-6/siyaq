@@ -8,7 +8,7 @@ import {
   pageContextBlock,
   summaryUserMessage,
   translationUserMessage,
-} from '@/lib/claude/prompts';
+} from '@/lib/llm/prompts';
 import type { LookupRequest } from '@/lib/types';
 
 const page = { url: 'https://example.com/a', title: 'A title', siteName: 'Example' };

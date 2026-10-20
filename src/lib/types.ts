@@ -118,6 +118,9 @@ export type ErrorCode =
   | 'refused'
   | 'bad_request'
   | 'too_long'
+  | 'usage_limit'
+  | 'signed_out'
+  | 'not_eligible'
   | 'unknown';
 
 export interface UserError {
@@ -127,7 +130,7 @@ export interface UserError {
 }
 
 export type LookupResponse =
-  | { ok: true; card: Card; cached: boolean; id: string }
+  | { ok: true; card: Card; cached: boolean; id: string; /** "provider:model" that answered. */ model: string }
   | { ok: false; error: UserError };
 
 export type SummaryResponse =

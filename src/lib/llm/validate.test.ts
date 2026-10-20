@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildSentencePassage } from '@/lib/text/tokens';
-import { validateDictionary, validateSummary, validateTranslation } from '@/lib/claude/validate';
+import { validateDictionary, validateSummary, validateTranslation } from '@/lib/llm/validate';
 
 // Before(1) They(2) turned(3) the(4) offer(5) down(6) After(7)
 const passage = buildSentencePassage('Before. They turned the offer down. After.');

@@ -1,4 +1,4 @@
-import { ClaudeError, MODEL, type ClaudeClient } from '@/lib/claude/client';
+import { LlmError, type LlmClient } from '@/lib/llm/types';
 import {
   DICTIONARY_SYSTEM,
   PROMPT_VERSION,
@@ -6,9 +6,9 @@ import {
   dictionaryUserMessage,
   pageContextBlock,
   translationUserMessage,
-} from '@/lib/claude/prompts';
-import { DICTIONARY_SCHEMA, TRANSLATION_SCHEMA } from '@/lib/claude/schemas';
-import { validateDictionary, validateTranslation } from '@/lib/claude/validate';
+} from '@/lib/llm/prompts';
+import { DICTIONARY_SCHEMA, TRANSLATION_SCHEMA } from '@/lib/llm/schemas';
+import { validateDictionary, validateTranslation } from '@/lib/llm/validate';
 import { log } from '@/lib/log';
 import { sha256Hex } from '@/lib/storage/hash';
 import { normalizeUrl } from '@/lib/storage/url';
@@ -22,21 +22,23 @@ export interface CardCache {
 }
 
 export interface LookupDeps {
-  client: ClaudeClient;
+  client: LlmClient;
   cache: CardCache;
   getSummary(url: string): Promise<Summary | null>;
   signal?: AbortSignal;
   /** Pause before retrying a transient API error. Tests pass 0. */
   retryDelayMs?: number;
+  /** "provider:model", part of the cache key so models never share answers. */
+  modelId: string;
 }
 
 const DEFAULT_RETRY_DELAY_MS = 700;
 
-/** Cache key: prompt version + model + kind + page + paragraph + selection + which occurrence. */
-export async function cacheKeyFor(req: LookupRequest): Promise<string> {
+/** Cache key: prompt version + provider and model + kind + page + paragraph + selection + which occurrence. */
+export async function cacheKeyFor(req: LookupRequest, modelId: string): Promise<string> {
   const material = [
     `v${PROMPT_VERSION}`,
-    MODEL,
+    modelId,
     req.kind,
     normalizeUrl(req.page.url),
     req.paragraph,
@@ -63,11 +65,11 @@ export async function performLookup(req: LookupRequest, deps: LookupDeps): Promi
     };
   }
 
-  const key = await cacheKeyFor(req);
+  const key = await cacheKeyFor(req, deps.modelId);
   const cached = await deps.cache.get(key);
   if (cached) {
     log.info('lookup_cached', { kind: req.kind });
-    return { ok: true, card: cached, cached: true, id: key };
+    return { ok: true, card: cached, cached: true, id: key, model: deps.modelId };
   }
 
   const summary = await deps.getSummary(req.page.url);
@@ -86,7 +88,7 @@ export async function performLookup(req: LookupRequest, deps: LookupDeps): Promi
     try {
       ({ json } = await deps.client.callStructured({ system, context, user, schema, maxTokens, signal: deps.signal }));
     } catch (err) {
-      const e = err instanceof ClaudeError ? err : new ClaudeError('unknown', 'Unexpected error while contacting Claude.');
+      const e = err instanceof LlmError ? err : new LlmError('unknown', 'Unexpected error while contacting the AI provider.');
       log.warn('lookup_api_error', { code: e.code, status: e.status ?? 0, attempt, ms: Date.now() - started });
       if (attempt === 0 && e.code === 'invalid_answer') {
         hint = e.message;
@@ -105,7 +107,7 @@ export async function performLookup(req: LookupRequest, deps: LookupDeps): Promi
     if (validated.ok) {
       log.info('lookup_ok', { kind: req.kind, attempt, ms: Date.now() - started });
       await deps.cache.set(key, validated.card);
-      return { ok: true, card: validated.card, cached: false, id: key };
+      return { ok: true, card: validated.card, cached: false, id: key, model: deps.modelId };
     }
     log.warn('lookup_answer_invalid', { kind: req.kind, attempt });
     hint = validated.reason;
@@ -113,6 +115,6 @@ export async function performLookup(req: LookupRequest, deps: LookupDeps): Promi
 
   return {
     ok: false,
-    error: { code: 'invalid_answer', message: 'Claude gave an unusable answer twice. Try again.' },
+    error: { code: 'invalid_answer', message: 'The model gave an unusable answer twice. Try again.' },
   };
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { performSummary, type SummaryDeps } from '@/lib/claude/summary';
+import { performSummary, type SummaryDeps } from '@/lib/llm/summary';
 import type { Summary } from '@/lib/types';
 
 function fakeDeps(answers: unknown[], delayMs = 0): SummaryDeps & { calls: number; store: Map<string, Summary> } {

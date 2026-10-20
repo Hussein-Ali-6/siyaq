@@ -15,6 +15,8 @@ export interface CardEntry {
   card?: Card;
   /** Lookup id, used as the saved-item id. */
   id?: string;
+  /** "provider:model" that answered. */
+  model?: string;
   sentence?: string;
   sentenceSegments?: Segment[];
   error?: UserError;

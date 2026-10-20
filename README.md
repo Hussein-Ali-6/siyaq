@@ -1,7 +1,8 @@
 # Siyaq
 
 A Chrome extension that replaces Google Translate for reading English articles: a context-aware
-dictionary and translator for a native Arabic speaker (CEFR C1), powered by Claude. Select a word or
+dictionary and translator for a native Arabic speaker (CEFR C1). It works with Claude, GPT, Gemini,
+any model on OpenRouter, or your ChatGPT plan through Sign in with ChatGPT. Select a word or
 a sentence, click the small icon, and get a card that was written after reading the paragraph and
 the article, not just the word.
 
@@ -41,9 +42,30 @@ pnpm build          # -> .output/chrome-mv3
 ```
 
 Load it in Chrome: open `chrome://extensions`, enable *Developer mode*, choose *Load unpacked* and
-pick `.output/chrome-mv3`. The settings page opens on first install: paste your Anthropic API key and
-press *Save and test*. The key is stored in `chrome.storage.local` (never synced) and only the
-service worker reads it. Pages that were already open need a reload before the icon appears.
+pick `.output/chrome-mv3`. The settings page opens on first install. Pick a provider, connect it,
+choose a model and press *Use for lookups*. Pages that were already open need a reload before the
+button appears.
+
+## AI providers
+
+| Provider | How you connect | Notes |
+|---|---|---|
+| Anthropic | API key | The default. The prompts were tuned on Claude Sonnet 5.5. Uses Anthropic's official SDK with prompt caching and refusal fallback. |
+| OpenAI | API key | Through the AI SDK, Responses API with structured output. |
+| Google Gemini | Google AI Studio key | Through the AI SDK. |
+| OpenRouter | One key | Hundreds of models; the list only shows models that support structured output. |
+| ChatGPT | Continue with ChatGPT | Uses the reader's ChatGPT plan instead of an API key, through OpenAI's Sign in with ChatGPT for open-source apps. |
+
+- Model lists load live from each provider, with a recommended default, and any model ID can be typed.
+- One thinking setting (low, medium, high) maps onto each provider's own reasoning or thinking control.
+- Each provider's site permission is optional and requested only when it is turned on. Keys and sign-in
+  tokens stay in `chrome.storage.local` (never synced), are readable only by the extension's own pages
+  and worker, and are only sent to their own provider.
+- Sign in with ChatGPT follows OpenAI's direct flow (OAuth with PKCE). OpenAI only redirects to
+  `http://127.0.0.1:<port>/auth/callback`, which an extension cannot listen on, so Siyaq opens the
+  sign-in in a tab and reads the redirect address from it. That needs Chrome's *tabs* permission,
+  requested only when you sign in. If the tab cannot be read, the settings page lets you paste the
+  address instead. The feature is a preview from OpenAI and is self-serve for free, open-source apps.
 
 For development, `pnpm dev` starts WXT with hot reload (it opens its own Chrome profile).
 
@@ -80,13 +102,16 @@ ordinary words, no combinations for idioms, the unit a dictionary would list.
 
 ```bash
 pnpm eval                              # dry run: builds every request, prints the numbered passages
-pnpm eval --live                       # calls Claude, writes scripts/eval/out/report.md
+pnpm eval --live                       # calls the model, writes scripts/eval/out/report.md
 pnpm eval --live --only guardian       # one article
+pnpm eval --live --pick crackdown,foot --no-summary   # a few cases, no summaries
+pnpm eval --live --provider openai --model gpt-6.1-mini --thinking low
 ```
 
-`--live` reads `ANTHROPIC_API_KEY` from the environment or from a `.env` file in the project root
-(git-ignored). This key is only for the evaluation script: the extension itself uses the key saved
-on its settings page.
+`--live` reads `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY` (or `GEMINI_API_KEY`) and
+`OPENROUTER_API_KEY` from the environment or from a `.env` file in the project root (git-ignored).
+These keys are only for the evaluation script: the extension uses the keys saved on its settings page.
+ChatGPT sign-in only works inside the extension.
 
 The report shows every card and flags padding (notes on ordinary words, combinations for idioms,
 retold meanings, plain English on clear sentences). Tune `src/lib/claude/prompts.ts`, bump
@@ -95,7 +120,7 @@ retold meanings, plain English on clear sentences). Tune `src/lib/claude/prompts
 ## Privacy
 
 Nothing leaves the browser until you click the icon. Each request sends the page title, the paragraph
-around the selection, the selection, and the article summary (once it exists) to the Anthropic API with
-your key. Pressing a speaker sends that word or sentence to Google's voice service, and the YouGlish and
+around the selection, the selection, and the article summary (once it exists) to the provider you
+chose, with your key or your ChatGPT sign-in. Pressing a speaker sends that word or sentence to Google's voice service, and the YouGlish and
 Oxford links send the word to those sites, only when you click them. The console only ever shows event names, error codes, status codes and counts, never page
 text or answers.

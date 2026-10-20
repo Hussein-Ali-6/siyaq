@@ -1,8 +1,11 @@
 import { defineBackground } from 'wxt/utils/define-background';
 import { browser } from 'wxt/browser';
-import { ClaudeError, createClaudeClient, type ClaudeClient } from '@/lib/claude/client';
-import { performLookup } from '@/lib/claude/lookup';
-import { performSummary } from '@/lib/claude/summary';
+import { listModels } from '@/lib/llm/catalog';
+import { performLookup } from '@/lib/llm/lookup';
+import { providerInfo } from '@/lib/llm/providers';
+import { resolveActiveClient, resolveClient } from '@/lib/llm/resolve';
+import { performSummary } from '@/lib/llm/summary';
+import { LlmError } from '@/lib/llm/types';
 import { log } from '@/lib/log';
 import { onMessage } from '@/lib/messaging';
 import {
@@ -14,10 +17,8 @@ import {
   trimCaches,
 } from '@/lib/storage/cache';
 import { isSaved, removeSaved, saveItem } from '@/lib/storage/saved';
-import { getApiKey, getPrefs } from '@/lib/storage/settings';
-import type { Card, UserError } from '@/lib/types';
-
-const NO_KEY: UserError = { code: 'no_key', message: 'Add your Anthropic API key in Siyaq settings.' };
+import { getActiveProvider, getPrefs, getProviderSettings } from '@/lib/storage/settings';
+import type { Card } from '@/lib/types';
 
 export default defineBackground(() => {
   let writes = 0;
@@ -30,55 +31,65 @@ export default defineBackground(() => {
   };
   const summaryCache = { get: getCachedSummary, set: setCachedSummary };
 
-  // One SDK client per key; rebuilt when the key changes.
-  let clientKey: string | null = null;
-  let client: ClaudeClient | null = null;
-  async function getClient(): Promise<{ client: ClaudeClient } | { error: UserError }> {
-    const key = await getApiKey();
-    if (!key) return { error: NO_KEY };
-    if (!client || clientKey !== key) {
-      client = createClaudeClient(key);
-      clientKey = key;
-    }
-    return { client };
-  }
-
   browser.runtime.onInstalled.addListener(({ reason }) => {
-    // Chrome 130+: keep local storage (where the key lives) out of reach of content scripts.
+    // Chrome 130+: keep local storage (where keys and tokens live) out of reach of content scripts.
     const local = browser.storage.local as unknown as { setAccessLevel?: (o: { accessLevel: string }) => Promise<void> };
     local.setAccessLevel?.({ accessLevel: 'TRUSTED_CONTEXTS' }).catch(() => undefined);
     if (reason === 'install') void browser.runtime.openOptionsPage();
   });
 
   onMessage('lookup', async ({ data }) => {
-    const c = await getClient();
-    if ('error' in c) return { ok: false, error: c.error };
-    return performLookup(data, { client: c.client, cache: cardCache, getSummary: getCachedSummary });
+    const r = await resolveActiveClient();
+    if ('error' in r) return { ok: false, error: r.error };
+    return performLookup(data, { client: r.client, modelId: r.modelId, cache: cardCache, getSummary: getCachedSummary });
   });
 
   onMessage('getSummary', ({ data }) => getCachedSummary(data));
 
   onMessage('summarize', async ({ data }) => {
-    const c = await getClient();
-    if ('error' in c) return { ok: false, error: c.error };
-    return performSummary(data, { client: c.client, cache: summaryCache });
+    const r = await resolveActiveClient();
+    if ('error' in r) return { ok: false, error: r.error };
+    return performSummary(data, { client: r.client, cache: summaryCache });
   });
 
   onMessage('saveItem', ({ data }) => saveItem(data));
   onMessage('unsaveItem', ({ data }) => removeSaved(data));
   onMessage('isSaved', ({ data }) => isSaved(data));
   onMessage('getPrefs', () => getPrefs());
-  onMessage('getStatus', async () => ({ hasKey: (await getApiKey()) !== null }));
 
-  onMessage('testApiKey', async () => {
-    const c = await getClient();
-    if ('error' in c) return { ok: false, message: c.error.message };
+  onMessage('getStatus', async () => {
+    const provider = await getActiveProvider();
+    const { model } = await getProviderSettings(provider);
+    const r = await resolveClient(provider);
+    return {
+      provider,
+      providerName: providerInfo(provider).name,
+      model,
+      ready: !('error' in r),
+      ...('error' in r ? { problem: r.error.message } : {}),
+    };
+  });
+
+  onMessage('testProvider', async ({ data: provider }) => {
+    const r = await resolveClient(provider);
+    if ('error' in r) return { ok: false, message: r.error.message };
     try {
-      await c.client.ping();
-      return { ok: true, message: 'The key works.' };
+      await r.client.ping();
+      return { ok: true, message: `${providerInfo(provider).name} works with ${r.model}.` };
     } catch (err) {
-      const e = err instanceof ClaudeError ? err : new ClaudeError('unknown', 'Unexpected error.');
-      log.warn('key_test_failed', { code: e.code, status: e.status ?? 0 });
+      const e = err instanceof LlmError ? err : new LlmError('unknown', 'Unexpected error.');
+      log.warn('provider_test_failed', { code: e.code, status: e.status ?? 0, kind: provider });
+      return { ok: false, message: e.message };
+    }
+  });
+
+  onMessage('listModels', async ({ data: provider }) => {
+    try {
+      const catalog = await listModels(provider);
+      return { ok: true, ...catalog };
+    } catch (err) {
+      const e = err instanceof LlmError ? err : new LlmError('unknown', 'Could not load the model list.');
+      log.warn('list_models_failed', { code: e.code, status: e.status ?? 0, kind: provider });
       return { ok: false, message: e.message };
     }
   });

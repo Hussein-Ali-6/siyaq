@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DICTIONARY_SCHEMA, SUMMARY_SCHEMA, TRANSLATION_SCHEMA } from '@/lib/claude/schemas';
+import { DICTIONARY_SCHEMA, SUMMARY_SCHEMA, TRANSLATION_SCHEMA } from '@/lib/llm/schemas';
 
 const FORBIDDEN = ['enum', 'const', 'minimum', 'maximum', 'minLength', 'maxLength', 'minItems', 'maxItems', 'pattern'];
 

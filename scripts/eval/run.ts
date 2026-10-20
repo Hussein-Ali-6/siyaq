@@ -2,7 +2,11 @@
  * Live evaluation of the prompts on real articles.
  *
  *   pnpm eval            dry run: builds every request and prints the numbered passages
- *   pnpm eval --live     calls Claude (needs ANTHROPIC_API_KEY) and writes scripts/eval/out/report.md
+ *   pnpm eval --live     calls the model and writes scripts/eval/out/report.md
+ *   pnpm eval --live --provider openai --model gpt-6.1-mini --thinking low
+ *        providers: anthropic (default), openai, google, openrouter; keys come from ANTHROPIC_API_KEY,
+ *        OPENAI_API_KEY, GOOGLE_API_KEY (or GEMINI_API_KEY) and OPENROUTER_API_KEY. ChatGPT sign-in
+ *        only works inside the extension.
  *   pnpm eval --only pg  limits to articles whose id contains "pg"
  *   pnpm eval --live --pick crackdown,outlier --no-summary   only those selections, no summaries
  *
@@ -10,9 +14,11 @@
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
-import { createClaudeClient } from '@/lib/claude/client';
-import { performLookup } from '@/lib/claude/lookup';
-import { performSummary } from '@/lib/claude/summary';
+import { createAiSdkClient } from '@/lib/llm/aisdk';
+import { DEFAULT_ANTHROPIC_MODEL, createAnthropicClient } from '@/lib/llm/anthropic';
+import type { LlmClient, Thinking } from '@/lib/llm/types';
+import { performLookup } from '@/lib/llm/lookup';
+import { performSummary } from '@/lib/llm/summary';
 import { extractArticle } from '@/lib/dom/article';
 import { buildFlatModel, spanToRange } from '@/lib/dom/flat';
 import { buildLookupRequest, readSelection } from '@/lib/dom/selection';
@@ -42,9 +48,9 @@ interface Article {
 }
 
 const here = new URL('.', import.meta.url);
-// Read ANTHROPIC_API_KEY from the project's .env when present, without printing anything from it.
+// Read API keys from the project's .env when present, without printing anything from it.
 const envFile = new URL('../../.env', here);
-if (existsSync(envFile) && !process.env.ANTHROPIC_API_KEY) process.loadEnvFile(envFile.pathname);
+if (existsSync(envFile)) process.loadEnvFile(envFile.pathname);
 const cases = JSON.parse(readFileSync(new URL('cases.json', here), 'utf8')) as { articles: Article[] };
 const args = process.argv.slice(2);
 const live = args.includes('--live');
@@ -162,12 +168,32 @@ function cardMarkdown(card: Card): string {
 }
 
 async function main() {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (live && !apiKey) {
-    console.error('ANTHROPIC_API_KEY is required for --live (environment or .env in the project root)');
+  const provider = flagValue('--provider') ?? 'anthropic';
+  const thinking = (flagValue('--thinking') ?? 'medium') as Thinking;
+  const keyEnv: Record<string, string | undefined> = {
+    anthropic: process.env.ANTHROPIC_API_KEY,
+    openai: process.env.OPENAI_API_KEY,
+    google: process.env.GOOGLE_API_KEY ?? process.env.GEMINI_API_KEY,
+    openrouter: process.env.OPENROUTER_API_KEY,
+  };
+  if (!(provider in keyEnv)) {
+    console.error(`Unknown provider "${provider}". Use anthropic, openai, google or openrouter.`);
     process.exit(1);
   }
-  const client = live && apiKey ? createClaudeClient(apiKey) : null;
+  const apiKey = keyEnv[provider];
+  const model = flagValue('--model') ?? (provider === 'anthropic' ? DEFAULT_ANTHROPIC_MODEL : undefined);
+  if (live && (!apiKey || !model)) {
+    console.error(!apiKey ? `No API key for ${provider} (environment or .env in the project root).` : `--model is required for ${provider}.`);
+    process.exit(1);
+  }
+  const modelId = `${provider}:${model}`;
+  let client: LlmClient | null = null;
+  if (live && apiKey && model) {
+    client = provider === 'anthropic'
+      ? createAnthropicClient(apiKey, { model, thinking })
+      : createAiSdkClient(provider as 'openai' | 'google' | 'openrouter', { apiKey, model, thinking });
+    console.log(`Provider ${provider}, model ${model}, thinking ${thinking}`);
+  }
   const report: string[] = [`# Siyaq evaluation ${new Date().toISOString().slice(0, 10)}${live ? '' : ' (dry run)'}`, ''];
   let total = 0;
   let flagged = 0;
@@ -223,7 +249,7 @@ async function main() {
         report.push(`### ${sel.text} (${sel.kind}${sel.why ? `: ${sel.why}` : ''})`, '', `Selected ${JSON.stringify(request.selectedIndices)} · paragraph ${countWords(request.paragraph)} words`, '', '```', numbered, '```', '');
         continue;
       }
-      const res = await performLookup(request, { client, cache: { get: async () => null, set: async () => undefined }, getSummary: async () => summary });
+      const res = await performLookup(request, { client, modelId, cache: { get: async () => null, set: async () => undefined }, getSummary: async () => summary });
       if (!res.ok) {
         console.log(`      ✗ ${res.error.code}: ${res.error.message}`);
         report.push(`### ✗ ${sel.text}`, '', `${res.error.code}: ${res.error.message}`, '');

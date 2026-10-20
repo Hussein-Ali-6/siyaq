@@ -1,7 +1,7 @@
-import { ClaudeError, type ClaudeClient } from '@/lib/claude/client';
-import { SUMMARY_SYSTEM, pageContextBlock, summaryUserMessage } from '@/lib/claude/prompts';
-import { SUMMARY_SCHEMA } from '@/lib/claude/schemas';
-import { validateSummary } from '@/lib/claude/validate';
+import { LlmError, type LlmClient } from '@/lib/llm/types';
+import { SUMMARY_SYSTEM, pageContextBlock, summaryUserMessage } from '@/lib/llm/prompts';
+import { SUMMARY_SCHEMA } from '@/lib/llm/schemas';
+import { validateSummary } from '@/lib/llm/validate';
 import { log } from '@/lib/log';
 import { normalizeUrl } from '@/lib/storage/url';
 import type { Summary, SummaryResponse } from '@/lib/types';
@@ -12,7 +12,7 @@ export interface SummaryCache {
 }
 
 export interface SummaryDeps {
-  client: ClaudeClient;
+  client: LlmClient;
   cache: SummaryCache;
   retryDelayMs?: number;
 }
@@ -43,7 +43,7 @@ async function summarize(input: SummaryInput, deps: SummaryDeps): Promise<Summar
         maxTokens: 5000,
       }));
     } catch (err) {
-      const e = err instanceof ClaudeError ? err : new ClaudeError('unknown', 'Unexpected error while contacting Claude.');
+      const e = err instanceof LlmError ? err : new LlmError('unknown', 'Unexpected error while contacting the AI provider.');
       log.warn('summary_api_error', { code: e.code, status: e.status ?? 0, attempt });
       if (attempt === 0 && (e.retryable || e.code === 'invalid_answer')) {
         if (e.retryable && retryDelay > 0) await delay(retryDelay);
@@ -60,7 +60,7 @@ async function summarize(input: SummaryInput, deps: SummaryDeps): Promise<Summar
     log.warn('summary_answer_invalid', { attempt });
     hint = validated.reason;
   }
-  return { ok: false, error: { code: 'invalid_answer', message: 'Claude gave an unusable summary twice.' } };
+  return { ok: false, error: { code: 'invalid_answer', message: 'The model gave an unusable summary twice.' } };
 }
 
 /** Summarises a page once: cached per URL, and concurrent callers share one request. */

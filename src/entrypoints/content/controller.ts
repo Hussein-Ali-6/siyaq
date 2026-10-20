@@ -202,6 +202,7 @@ export class SiyaqController {
     entry.status = 'ready';
     entry.card = res.card;
     entry.id = res.id;
+    entry.model = res.model;
     const passage = context.request.passage;
     if (res.card.kind === 'word') {
       entry.sentenceSegments = sentenceSegments(passage, res.card.unitIndices);

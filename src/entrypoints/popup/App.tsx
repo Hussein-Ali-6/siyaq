@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { browser } from 'wxt/browser';
-import { sendMessage } from '@/lib/messaging';
+import { sendMessage, type ProviderStatus } from '@/lib/messaging';
 import { Arabic } from '@/ui/components/Arabic';
 import { Skeleton } from '@/ui/components/Skeleton';
 import { useTheme } from '@/ui/components/useTheme';
@@ -14,15 +14,14 @@ interface ActiveTab {
 
 export function App() {
   useTheme();
-  const [hasKey, setHasKey] = useState<boolean | null>(null);
+  const [status, setStatus] = useState<ProviderStatus | null>(null);
   const [tab, setTab] = useState<ActiveTab | null>(null);
   const [summary, setSummary] = useState<SummaryState>({ status: 'idle' });
 
   useEffect(() => {
     void (async () => {
       try {
-        const status = await sendMessage('getStatus');
-        setHasKey(status.hasKey);
+        setStatus(await sendMessage('getStatus'));
         const [t] = await browser.tabs.query({ active: true, currentWindow: true });
         if (t?.id !== undefined && t.url && /^https?:/.test(t.url)) {
           setTab({ id: t.id, url: t.url, title: t.title ?? '' });
@@ -30,7 +29,7 @@ export function App() {
           if (cached) setSummary({ status: 'ready', summary: cached });
         }
       } catch {
-        setHasKey(false);
+        setStatus({ provider: 'anthropic', providerName: 'Siyaq', model: '', ready: false, problem: 'Could not reach the Siyaq background service.' });
       }
     })();
   }, []);
@@ -63,9 +62,14 @@ export function App() {
         </button>
       </header>
 
-      {hasKey === false && (
+      {status && status.ready && (
+        <p className="truncate text-[12px] text-muted" title={`${status.providerName} · ${status.model}`}>
+          Using {status.providerName} · <span className="font-mono">{status.model}</span>
+        </p>
+      )}
+      {status && !status.ready && (
         <div className="rounded-xl border border-amber/40 bg-amber-soft p-3 text-[13px]">
-          <p className="font-medium">Add your Anthropic API key to start.</p>
+          <p className="font-medium">{status.problem ?? 'Set up an AI provider to start.'}</p>
           <button type="button" onClick={openOptions} className="btn-primary mt-2">
             Open settings
           </button>
@@ -93,7 +97,7 @@ export function App() {
             ) : (
               <div className="space-y-2">
                 {summary.status === 'error' && <p className="text-[13px] text-danger">{summary.error?.message}</p>}
-                <button type="button" onClick={summarize} className="btn-primary" disabled={hasKey === false}>
+                <button type="button" onClick={summarize} className="btn-primary" disabled={!!status && !status.ready}>
                   Summarise this page
                 </button>
               </div>

@@ -46,7 +46,7 @@ const segments = [
 ];
 
 function entry(partial: Partial<CardEntry> & Pick<CardEntry, 'kind' | 'status'>): CardEntry {
-  return { key: Math.random().toString(36).slice(2), selection: 'turned', saved: false, ...partial };
+  return { key: Math.random().toString(36).slice(2), selection: 'turned', saved: false, model: 'anthropic:claude-sonnet-5-5', ...partial };
 }
 
 const noop = () => undefined;
