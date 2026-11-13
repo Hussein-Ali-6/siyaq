@@ -26,7 +26,7 @@ the article, not just the word.
   the original is hard, and at most three "Key expressions" that open their own dictionary card.
 - **Context sent with every request:** page title and site, the article summary once it exists, the
   paragraph around the selection widened to 150–400 words, and the selection as numbered word tokens
-  (`[12]gave [13]up`) so Claude's answer can be checked and the exact words highlighted on the page.
+  (`[12]gave [13]up`) so the model's answer can be checked and the exact words highlighted on the page.
 - **Article summary.** The first card opened on a page starts a summary in the background
   (Mozilla Readability, capped at 4,000 words). It is cached per URL, sent as context with later
   requests, and shown by the book button in the card header and in the toolbar popup.
@@ -72,13 +72,15 @@ For development, `pnpm dev` starts WXT with hot reload (it opens its own Chrome 
 ## Project layout
 
 ```
-src/entrypoints/background.ts   service worker: Claude calls, caches, saved items, key test
+src/entrypoints/background.ts   service worker: model calls, caches, saved items, provider test, model lists
 src/entrypoints/content/        selection watcher, trigger icon, card host, highlight, extraction
 src/entrypoints/popup|options|words   extension pages (React + Tailwind v4)
 src/lib/text                    sentence/word segmentation, numbered passages, index checks
 src/lib/dom                     paragraph widening, flat text model, selection, highlight, article
-src/lib/claude                  SDK client, prompts, loose API schemas, strict validation, lookup/summary
-src/lib/storage                 settings, caches, saved items, URL normalisation, hashing
+src/lib/llm                     provider clients, model lists, prompts, loose API schemas, strict validation, lookup/summary
+src/lib/auth                    Sign in with ChatGPT (OAuth with PKCE)
+src/lib/storage                 settings, provider keys, caches, saved items, URL normalisation, hashing
+src/lib/speech.ts, links.ts     read-aloud, YouGlish and Oxford links
 src/ui                          theme, card components, shared pieces
 playground/                     visual playground for the card (pnpm playground)
 scripts/eval/                   live prompt evaluation on real articles
@@ -114,7 +116,7 @@ These keys are only for the evaluation script: the extension uses the keys saved
 ChatGPT sign-in only works inside the extension.
 
 The report shows every card and flags padding (notes on ordinary words, combinations for idioms,
-retold meanings, plain English on clear sentences). Tune `src/lib/claude/prompts.ts`, bump
+retold meanings, plain English on clear sentences). Tune `src/lib/llm/prompts.ts`, bump
 `PROMPT_VERSION` so cached answers are not reused, and run again.
 
 ## Privacy

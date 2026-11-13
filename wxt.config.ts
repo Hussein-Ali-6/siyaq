@@ -6,7 +6,7 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   manifest: {
     name: 'Siyaq — context dictionary',
-    description: 'Context-aware English to Arabic dictionary and translation, powered by Claude.',
+    description: 'Context-aware English to Arabic dictionary and translation, powered by the AI model you choose.',
     permissions: ['storage', 'activeTab'],
     host_permissions: ['https://api.anthropic.com/*'],
     // Requested at runtime only when the reader turns a provider on.

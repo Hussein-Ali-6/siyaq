@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Context-aware English to Arabic dictionary and translation Chrome extension, powered by Claude.",
+  "description": "Context-aware English to Arabic dictionary and translation Chrome extension, powered by the AI model you choose.",
   "scripts": {
     "dev": "wxt",
     "build": "wxt build",
