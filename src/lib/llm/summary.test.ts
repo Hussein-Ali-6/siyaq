@@ -1,14 +1,17 @@
 import { describe, expect, it } from 'vitest';
+import { summarySchema } from '@/lib/llm/schemas';
 import { performSummary, type SummaryDeps } from '@/lib/llm/summary';
 import type { Summary } from '@/lib/types';
 
-function fakeDeps(answers: unknown[], delayMs = 0, language = 'ar'): SummaryDeps & { calls: number; store: Map<string, Summary> } {
+function fakeDeps(answers: unknown[], delayMs = 0, language = 'ar'): SummaryDeps & { calls: number; store: Map<string, Summary>; schemas: unknown[] } {
   const store = new Map<string, Summary>();
   const deps = {
     calls: 0,
     store,
+    schemas: [] as unknown[],
     client: {
-      async callStructured() {
+      async callStructured(args: { schema: unknown }) {
+        deps.schemas.push(args.schema);
         const next = answers[deps.calls++];
         if (delayMs) await new Promise((r) => setTimeout(r, delayMs));
         return { json: next, stopReason: 'end_turn' };
@@ -47,6 +50,22 @@ describe('performSummary', () => {
     const deps = fakeDeps([{ english: 'A short summary.' }], 0, 'none');
     const res = await performSummary({ ...input, url: 'https://example.com/e' }, deps);
     expect(res.ok && res.summary).toEqual({ language: 'none', english: 'A short summary.' });
+  });
+
+  it('hands the model the answer format with a translation for a translation language', async () => {
+    const deps = fakeDeps([good]);
+    const res = await performSummary({ ...input, url: 'https://example.com/f' }, deps);
+    expect(res.ok).toBe(true);
+    expect(deps.schemas[0]).toBe(summarySchema('ar'));
+    expect((deps.schemas[0] as { required: string[] }).required).toEqual(['english', 'translation']);
+  });
+
+  it('hands the model the answer format without a translation for English only', async () => {
+    const deps = fakeDeps([{ english: 'A short summary.' }], 0, 'none');
+    const res = await performSummary({ ...input, url: 'https://example.com/g' }, deps);
+    expect(res.ok).toBe(true);
+    expect(deps.schemas[0]).toBe(summarySchema('none'));
+    expect((deps.schemas[0] as { required: string[] }).required).toEqual(['english']);
   });
 
   it('summarises, validates and caches', async () => {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { buildWordPassage } from '@/lib/text/tokens';
+import { buildSentencePassage, buildWordPassage } from '@/lib/text/tokens';
 import { cacheKeyFor, performLookup, type LookupDeps } from '@/lib/llm/lookup';
+import { dictionarySchema, translationSchema } from '@/lib/llm/schemas';
 import { LlmError } from '@/lib/llm/types';
 import type { Card, LookupRequest } from '@/lib/types';
 import type { Reader } from '@/lib/llm/prompts';
@@ -12,6 +13,11 @@ function wordRequest(): LookupRequest {
   const s = text.indexOf('turned');
   const { passage, selectedIndices } = buildWordPassage(text, { start: s, end: s + 6 });
   return { kind: 'word', page, paragraph: 'Some paragraph text.', selection: 'turned', passage, selectedIndices };
+}
+
+function sentenceRequest(): LookupRequest {
+  const selection = 'The deal fell through.';
+  return { kind: 'sentence', page, paragraph: 'Some paragraph text.', selection, passage: buildSentencePassage(selection), selectedIndices: [1, 2, 3, 4] };
 }
 
 const goodAnswer = {
@@ -30,15 +36,17 @@ const goodAnswer = {
 function fakeDeps(
   answers: Array<unknown | Error>,
   reader: Reader = { language: 'ar', level: 'C1' },
-): LookupDeps & { calls: number; store: Map<string, Card>; systems: string[] } {
+): LookupDeps & { calls: number; store: Map<string, Card>; systems: string[]; schemas: unknown[] } {
   const store = new Map<string, Card>();
   const deps = {
     calls: 0,
     store,
     systems: [] as string[],
+    schemas: [] as unknown[],
     client: {
-      async callStructured(args: { system: string }) {
+      async callStructured(args: { system: string; schema: unknown }) {
         deps.systems.push(args.system);
+        deps.schemas.push(args.schema);
         const next = answers[deps.calls++];
         if (next instanceof Error) throw next;
         return { json: next, stopReason: 'end_turn' };
@@ -102,6 +110,48 @@ describe('performLookup', () => {
     const deps = fakeDeps([bare], { language: 'none', level: 'B2' });
     const res = await performLookup(wordRequest(), deps);
     expect(res.ok && res.card.language).toBe('none');
+  });
+
+  describe('the answer format handed to the model', () => {
+    const required = (schema: unknown) => (schema as { required: string[] }).required;
+    const spanish: Reader = { language: 'es', level: 'B2' };
+    const englishOnly: Reader = { language: 'none', level: 'B2' };
+
+    it('has the translation fields for a word when the reader has a translation language', async () => {
+      const deps = fakeDeps([{ ...goodAnswer, translation: 'rechazar', sentenceTranslation: 'Rechazaron la oferta.' }], spanish);
+      expect((await performLookup(wordRequest(), deps)).ok).toBe(true);
+      expect(deps.schemas[0]).toBe(dictionarySchema('es'));
+      expect(required(deps.schemas[0])).toEqual(expect.arrayContaining(['translation', 'sentenceTranslation']));
+    });
+
+    it('has no translation fields for a word when the reader chose English only', async () => {
+      const { translation: _t, sentenceTranslation: _s, ...bare } = goodAnswer;
+      const deps = fakeDeps([bare], englishOnly);
+      expect((await performLookup(wordRequest(), deps)).ok).toBe(true);
+      expect(deps.schemas[0]).toBe(dictionarySchema('none'));
+      expect(required(deps.schemas[0])).not.toContain('translation');
+      expect(required(deps.schemas[0])).not.toContain('sentenceTranslation');
+    });
+
+    it('has the translation field for a sentence when the reader has a translation language', async () => {
+      const deps = fakeDeps([{ translation: 'El acuerdo fracasó.', plainEnglish: '', keyExpressions: [] }], spanish);
+      expect((await performLookup(sentenceRequest(), deps)).ok).toBe(true);
+      expect(deps.schemas[0]).toBe(translationSchema('es'));
+      expect(required(deps.schemas[0])).toEqual(['translation', 'plainEnglish', 'keyExpressions']);
+    });
+
+    it('has no translation field for a sentence when the reader chose English only', async () => {
+      const deps = fakeDeps([{ plainEnglish: 'The deal failed.', keyExpressions: [] }], englishOnly);
+      expect((await performLookup(sentenceRequest(), deps)).ok).toBe(true);
+      expect(deps.schemas[0]).toBe(translationSchema('none'));
+      expect(required(deps.schemas[0])).toEqual(['plainEnglish', 'keyExpressions']);
+    });
+
+    it('is the same on the retry after an unusable answer', async () => {
+      const deps = fakeDeps([{ plainEnglish: '', keyExpressions: [] }, { plainEnglish: 'The deal failed.', keyExpressions: [] }], englishOnly);
+      expect((await performLookup(sentenceRequest(), deps)).ok).toBe(true);
+      expect(deps.schemas).toEqual([translationSchema('none'), translationSchema('none')]);
+    });
   });
 
   it('returns a validated card and caches it', async () => {
