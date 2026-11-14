@@ -1,29 +1,35 @@
 # Siyaq
 
 A Chrome extension that replaces Google Translate for reading English articles: a context-aware
-dictionary and translator for a native Arabic speaker (CEFR C1). It works with Claude, GPT, Gemini,
-any model on OpenRouter, or your ChatGPT plan through Sign in with ChatGPT. Select a word or
-a sentence, click the small icon, and get a card that was written after reading the paragraph and
-the article, not just the word.
+dictionary and translator for English learners, in the language and at the reading level you choose.
+It works with Claude, GPT, Gemini, any model on OpenRouter, or your ChatGPT plan through Sign in with
+ChatGPT. Select a word or a sentence, click the small icon, and get a card that was written after
+reading the paragraph and the article, not just the word.
 
 ## How it works
 
 - **Trigger.** Selecting English text (a double-click selects a word) shows a small round س button next to
-  the selection. Selections that are mostly Arabic, another script, or only numbers and symbols don't
+  the selection. Selections that are mostly in another script, or only numbers and symbols, don't
   show it. Nothing is sent anywhere until you click it. The icon never appears in inputs,
   textareas or editable areas.
-- **Dictionary card** (up to 4 words): Claude decides the unit you mean (a word, or part of a phrasal
+- **Dictionary card** (up to 4 words): the model decides the unit you mean (a word, or part of a phrasal
   verb, idiom or fixed expression, even split ones like "turned the offer down"), then shows the
-  headword and part of speech, the meaning in this sentence in simple English plus the usual Arabic
-  equivalent, "Good to know" notes only when needed, the sentence with the unit in bold, its Arabic
-  translation blurred until clicked, two examples, "Common combinations" only for words with strong
-  partners, other meanings collapsed, and ★ Save. The Arabic is the usual equivalent, with a few words of
-  clarification when a single Arabic word would mislead, for example because it has several meanings.
+  headword and part of speech, the meaning in this sentence in simple English plus the usual
+  equivalent in your language, "Good to know" notes only when needed, the sentence with the unit in
+  bold, its translation blurred until clicked, two examples, "Common combinations" only for words with
+  strong partners, other meanings collapsed, and ★ Save. The translation is the usual equivalent, with
+  a few words of clarification when a single word would mislead, for example because it has several
+  meanings.
 - **Pronunciation.** Word cards show British and American IPA, each with a speaker button that reads the
   word in Chrome's Google voices, plus links that open the word on YouGlish (real videos) and in Oxford
   Learner's Dictionaries. Translation cards have UK and US speakers for the selected text.
-- **Translation card** (a sentence or longer): a natural Arabic translation, plainer English only when
+- **Translation card** (a sentence or longer): a natural translation into your language, plainer English only when
   the original is hard, and at most three "Key expressions" that open their own dictionary card.
+- **Language and level.** The Reading section of the settings page sets the translation language (40
+  languages, any other by typing its name, or English only) and your English level (Intermediate B1,
+  Upper-intermediate B2, Advanced C1). The level changes how simply cards explain and how much they
+  explain. With English only, cards drop the translations, and a sentence card always gives a plainer
+  English version instead. A new install starts with the browser's language.
 - **Context sent with every request:** page title and site, the article summary once it exists, the
   paragraph around the selection widened to 150–400 words, and the selection as numbered word tokens
   (`[12]gave [13]up`) so the model's answer can be checked and the exact words highlighted on the page.
@@ -31,7 +37,7 @@ the article, not just the word.
   (Mozilla Readability, capped at 4,000 words). It is cached per URL, sent as context with later
   requests, and shown by the book button in the card header and in the toolbar popup.
 - **Saved items** live in `chrome.storage.local`. The "My words" page lists them newest first, with
-  search in English or Arabic, a link back to the source sentence, delete, and JSON/CSV export.
+  search, a link back to the source sentence, delete, and JSON/CSV export. Each item keeps the language it was saved in.
 - **Cache.** Answers are cached by URL, paragraph and selection, so asking again costs nothing.
 
 ## Setup
@@ -79,7 +85,8 @@ src/lib/text                    sentence/word segmentation, numbered passages, i
 src/lib/dom                     paragraph widening, flat text model, selection, highlight, article
 src/lib/llm                     provider clients, model lists, prompts, loose API schemas, strict validation, lookup/summary
 src/lib/auth                    Sign in with ChatGPT (OAuth with PKCE)
-src/lib/storage                 settings, provider keys, caches, saved items, URL normalisation, hashing
+src/lib/storage                 settings, provider keys, caches, saved items, migrate.ts (converting old saved words; the install and update step), URL normalisation, hashing
+src/lib/languages.ts            the translation languages
 src/lib/speech.ts, links.ts     read-aloud, YouGlish and Oxford links
 src/ui                          theme, card components, shared pieces
 playground/                     visual playground for the card (pnpm playground)

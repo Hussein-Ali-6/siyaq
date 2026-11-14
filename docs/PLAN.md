@@ -13,7 +13,7 @@ Plan written 2026-10-16 before implementation. Kept up to date as the architectu
 | Caching | Two cache breakpoints: static system prompt, then a per-page "article context" block (title, site, summary) | Same-page lookups re-use both; the 512-token minimum is cleared by the system prompt. |
 | Numbered tokens | Sent for **both** card kinds. For sentences the selection itself is numbered, so key expressions come back with word indices | Lets us verify each key expression, highlight it, and open its dictionary card without fuzzy string matching. |
 | Selection highlight | When the card opens the native selection is dropped and replaced by a CSS Custom Highlight on the selected words; it moves to the unit's words when the answer arrives | One unambiguous highlight instead of two overlapping ones. |
-| Selection size | Translation selections capped at 400 words (card explains) | Keeps requests and Arabic output bounded. |
+| Selection size | Translation selections capped at 400 words (card explains) | Keeps requests and translated output bounded. |
 | Cache key | sha-256 of prompt version + kind + normalised URL + paragraph + selection + selected indices | Includes which occurrence was selected, so a word repeated in one paragraph with two senses is not confused. |
 | Key secrecy | Key lives in `chrome.storage.local`; only the service worker and the options page touch it; the content script never calls `chrome.storage`. The worker also tries `storage.local.setAccessLevel('TRUSTED_CONTEXTS')` (Chrome 130+) which locks content scripts out of local storage entirely | Belt and braces. |
 | Logging | `log.ts` accepts an event code and numeric/boolean fields only | Page text and answers can never reach the console. |
@@ -60,14 +60,15 @@ src/lib/
   llm/lookup.ts          cache -> prompt -> call -> validate -> one retry -> cache
   llm/summary.ts         article summary pipeline
   auth/chatgpt-oauth.ts  Sign in with ChatGPT: OAuth with PKCE, loopback redirect, token refresh
-  storage/{settings,cache,saved,url,hash}.ts
+  storage/{settings,cache,saved,migrate,url,hash}.ts
+  languages.ts           the translation languages and everything derived from a language id
   speech.ts              read-aloud through the browser's speech synthesis
   links.ts               YouGlish and Oxford Learner's links
   log.ts
 src/ui/
   theme.css              colour tokens (dark default, amber accent), font stacks, RTL helpers
-  card/                  CardApp, CardFrame, DictionaryView, TranslationView, SummaryView, LoadingView, ErrorView, TriggerIcon
-  components/            small shared pieces (Arabic, BlurReveal, Collapsible, Pronunciation, SpeakButton, LookupLinks, Skeleton)
+  card/                  CardApp, CardFrame, DictionaryView, TranslationView, SummaryView, LoadingView, ErrorView, TriggerIcon, title
+  components/            small shared pieces (Translated, BlurReveal, Collapsible, Pronunciation, SpeakButton, LookupLinks, Skeleton)
 playground/              Vite page that mounts the real card in a shadow root with fixtures (visual QA)
 scripts/eval/            live evaluation harness: 3 articles x ~30 selections, dry-run or live
 ```
@@ -108,18 +109,20 @@ indices to DOM ranges → highlight → card renders.
 ## Data model
 
 - `LookupRequest { kind, page{url,title,siteName}, paragraph, selection, passage: Token[], selectedIndices, sentenceSpan? }`
-- `DictionaryCard { headword, partOfSpeech, unitIndices, meaning, arabic, notes[], sentenceArabic, examples[], combinations[], otherMeanings[] }`
-- `TranslationCard { arabic, plainEnglish, keyExpressions[{expression, indices, meaning, arabic}] }`
-- `Summary { english, arabic }`, `SavedItem { id, kind, card, selection, sentence, sentenceSegments, pageTitle, url, savedAt }`
-- Storage keys: `apiKey` (Anthropic) and `apiKey:<provider>` (the others), `activeProvider`, `providerSettings` (model and thinking per provider), `chatgpt` (sign-in tokens), `chatgptLastAttempt` (last sign-in step, for error messages), `prefs`, `saved` (array), `cache:<sha>` (LRU-trimmed to 400), `summary:<sha(url)>` (trimmed to 100).
+- `DictionaryCard { language, headword, partOfSpeech, unitIndices, meaning, translation?, notes[], sentenceTranslation?, examples[], combinations[], otherMeanings[{meaning, translation?}] }`
+- `TranslationCard { language, translation?, plainEnglish, keyExpressions[{expression, indices, meaning, translation?}] }`
+- `Summary { language, english, translation? }`, `SavedItem { id, kind, card, selection, sentence, sentenceSegments, pageTitle, url, savedAt }`
+- `language` is a language id from `src/lib/languages.ts`: `none` (English only, no translation fields), a listed code such as `ar`, or `x:<name>` for a typed language. `Prefs { theme, language, level }` holds the reader's choice; `level` is `B1`, `B2` or `C1`.
+- Storage keys: `apiKey` (Anthropic) and `apiKey:<provider>` (the others), `activeProvider`, `providerSettings` (model and thinking per provider), `chatgpt` (sign-in tokens), `chatgptLastAttempt` (last sign-in step, for error messages), `prefs` (theme, translation language, level), `saved` (array), `cache:<sha>` (LRU-trimmed to 400; a card key includes the language and level), `summary:<sha(url)>` (trimmed to 100; the key includes the language).
 
 ## Prompt + validation rules
 
-Encoded verbatim from the brief in `prompts.ts` (meaning = general B1 definition, Arabic = usual equivalent,
+Encoded verbatim from the brief in `prompts.ts` (meaning = general B1 definition, translation = usual equivalent in the reader's language,
 notes default empty with the five allowed reasons, combinations only for strong partners, worked examples
-with empty lists). API schema has no enums/min/max; `validate.ts` enforces: Arabic script present, 1–2
+with empty lists). API schema has no enums/min/max; `validate.ts` enforces: translation fields present and, for a language with its own script, written in it (none for English only), 1–2
 examples, no cap on notes (the model decides, since 2026-10-18), ≤6 combinations, ≤4 other meanings, ≤3 key expressions (trim, not reject), indices
 unique, in range and overlapping the selection (reject → retry once with the reason appended).
+The prompts are built for a reader: dictionarySystem(reader) and translationSystem(reader) take the language and level, summarySystem(language) takes the language. The worked examples show the English fields only.
 
 ## Learned while building (2026-10-16)
 
@@ -169,6 +172,7 @@ samples to limit cost:
 | 6 to 8 | Purpose sentences, "most cards have none", a short list | Notes on 15 to 22 of 28 |
 | 9 | One Arabic field, grammar allowed, medium effort | Notes on all 9 of a note-prone sample, widened units |
 | 10 (shipped) | Notes opt-in with grammar as an allowed reason, two unit examples | Notes on 7 of 9 note-prone words and 1 of 6 everyday words, units right |
+| 13 | Language and level come from settings; worked examples show English fields only | Live checks not run yet |
 
 Everything outside notes stays loose. Units and the Arabic field are guided by a sentence each.
 Experimental prompts and reports are kept in `scripts/eval/out` (git-ignored).
