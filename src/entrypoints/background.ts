@@ -2,6 +2,7 @@ import { defineBackground } from 'wxt/utils/define-background';
 import { browser } from 'wxt/browser';
 import { listModels } from '@/lib/llm/catalog';
 import { performLookup } from '@/lib/llm/lookup';
+import type { Reader } from '@/lib/llm/prompts';
 import { providerInfo } from '@/lib/llm/providers';
 import { resolveActiveClient, resolveClient } from '@/lib/llm/resolve';
 import { performSummary } from '@/lib/llm/summary';
@@ -30,6 +31,8 @@ export default defineBackground(() => {
     },
   };
   const summaryCache = { get: getCachedSummary, set: setCachedSummary };
+  // Arabic and Advanced until the next task reads the reader's settings.
+  const reader: Reader = { language: 'ar', level: 'C1' };
 
   browser.runtime.onInstalled.addListener(({ reason }) => {
     // Chrome 130+: keep local storage (where keys and tokens live) out of reach of content scripts.
@@ -41,7 +44,7 @@ export default defineBackground(() => {
   onMessage('lookup', async ({ data }) => {
     const r = await resolveActiveClient();
     if ('error' in r) return { ok: false, error: r.error };
-    return performLookup(data, { client: r.client, modelId: r.modelId, cache: cardCache, getSummary: getCachedSummary });
+    return performLookup(data, { client: r.client, modelId: r.modelId, reader, cache: cardCache, getSummary: getCachedSummary });
   });
 
   onMessage('getSummary', ({ data }) => getCachedSummary(data));
@@ -49,7 +52,7 @@ export default defineBackground(() => {
   onMessage('summarize', async ({ data }) => {
     const r = await resolveActiveClient();
     if ('error' in r) return { ok: false, error: r.error };
-    return performSummary(data, { client: r.client, cache: summaryCache });
+    return performSummary(data, { client: r.client, cache: summaryCache, language: reader.language });
   });
 
   onMessage('saveItem', ({ data }) => saveItem(data));

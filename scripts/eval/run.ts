@@ -18,6 +18,7 @@ import { createAiSdkClient } from '@/lib/llm/aisdk';
 import { DEFAULT_ANTHROPIC_MODEL, createAnthropicClient } from '@/lib/llm/anthropic';
 import type { LlmClient, Thinking } from '@/lib/llm/types';
 import { performLookup } from '@/lib/llm/lookup';
+import type { Reader } from '@/lib/llm/prompts';
 import { performSummary } from '@/lib/llm/summary';
 import { extractArticle } from '@/lib/dom/article';
 import { buildFlatModel, spanToRange } from '@/lib/dom/flat';
@@ -58,6 +59,7 @@ const flagValue = (name: string) => (args.includes(name) ? args[args.indexOf(nam
 const only = flagValue('--only');
 const pick = flagValue('--pick')?.split(',').map((p) => p.trim().toLowerCase()).filter(Boolean);
 const withSummary = !args.includes('--no-summary');
+const reader: Reader = { language: 'ar', level: 'C1' };
 const picked = (sel: Selection) => !pick || pick.some((p) => sel.text.toLowerCase().startsWith(p));
 const cacheDir = new URL('.cache/', here);
 const outDir = new URL('out/', here);
@@ -214,6 +216,7 @@ async function main() {
     if (client && withSummary) {
       const res = await performSummary({ url: article.url, title: page.title, siteName: page.siteName, text: extracted.text }, {
         client,
+        language: reader.language,
         cache: { get: async () => null, set: async () => undefined },
       });
       if (res.ok) {
@@ -249,7 +252,7 @@ async function main() {
         report.push(`### ${sel.text} (${sel.kind}${sel.why ? `: ${sel.why}` : ''})`, '', `Selected ${JSON.stringify(request.selectedIndices)} · paragraph ${countWords(request.paragraph)} words`, '', '```', numbered, '```', '');
         continue;
       }
-      const res = await performLookup(request, { client, modelId, cache: { get: async () => null, set: async () => undefined }, getSummary: async () => summary });
+      const res = await performLookup(request, { client, modelId, reader, cache: { get: async () => null, set: async () => undefined }, getSummary: async () => summary });
       if (!res.ok) {
         console.log(`      ✗ ${res.error.code}: ${res.error.message}`);
         report.push(`### ✗ ${sel.text}`, '', `${res.error.code}: ${res.error.message}`, '');

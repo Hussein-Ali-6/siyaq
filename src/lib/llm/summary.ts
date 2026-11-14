@@ -1,6 +1,6 @@
 import { LlmError, type LlmClient } from '@/lib/llm/types';
-import { SUMMARY_SYSTEM, pageContextBlock, summaryUserMessage } from '@/lib/llm/prompts';
-import { SUMMARY_SCHEMA } from '@/lib/llm/schemas';
+import { pageContextBlock, summarySystem, summaryUserMessage } from '@/lib/llm/prompts';
+import { summarySchema } from '@/lib/llm/schemas';
 import { validateSummary } from '@/lib/llm/validate';
 import { log } from '@/lib/log';
 import { normalizeUrl } from '@/lib/storage/url';
@@ -14,6 +14,8 @@ export interface SummaryCache {
 export interface SummaryDeps {
   client: LlmClient;
   cache: SummaryCache;
+  /** Translation language id; "none" for an English-only summary. */
+  language: string;
   retryDelayMs?: number;
 }
 
@@ -36,10 +38,10 @@ async function summarize(input: SummaryInput, deps: SummaryDeps): Promise<Summar
     let json: unknown;
     try {
       ({ json } = await deps.client.callStructured({
-        system: SUMMARY_SYSTEM,
+        system: summarySystem(deps.language),
         context,
         user,
-        schema: SUMMARY_SCHEMA,
+        schema: summarySchema(deps.language),
         maxTokens: 5000,
       }));
     } catch (err) {
@@ -51,8 +53,7 @@ async function summarize(input: SummaryInput, deps: SummaryDeps): Promise<Summar
       }
       return { ok: false, error: { code: e.code, message: e.message, status: e.status } };
     }
-    // Arabic stays fixed here until the reader's language is passed in (next task).
-    const validated = validateSummary(json, 'ar');
+    const validated = validateSummary(json, deps.language);
     if (validated.ok) {
       await deps.cache.set(input.url, validated.card);
       log.info('summary_ok', { attempt });

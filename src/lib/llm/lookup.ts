@@ -1,13 +1,14 @@
 import { LlmError, type LlmClient } from '@/lib/llm/types';
 import {
-  DICTIONARY_SYSTEM,
   PROMPT_VERSION,
-  TRANSLATION_SYSTEM,
+  dictionarySystem,
   dictionaryUserMessage,
   pageContextBlock,
+  translationSystem,
   translationUserMessage,
+  type Reader,
 } from '@/lib/llm/prompts';
-import { DICTIONARY_SCHEMA, TRANSLATION_SCHEMA } from '@/lib/llm/schemas';
+import { dictionarySchema, translationSchema } from '@/lib/llm/schemas';
 import { validateDictionary, validateTranslation } from '@/lib/llm/validate';
 import { log } from '@/lib/log';
 import { sha256Hex } from '@/lib/storage/hash';
@@ -28,6 +29,8 @@ export interface LookupDeps {
   signal?: AbortSignal;
   /** Pause before retrying a transient API error. Tests pass 0. */
   retryDelayMs?: number;
+  /** Who the answer is for: translation language and reading level. */
+  reader: Reader;
   /** "provider:model", part of the cache key so models never share answers. */
   modelId: string;
 }
@@ -75,8 +78,9 @@ export async function performLookup(req: LookupRequest, deps: LookupDeps): Promi
   const summary = await deps.getSummary(req.page.url);
   const context = pageContextBlock(req.page, summary);
   const isWord = req.kind === 'word';
-  const system = isWord ? DICTIONARY_SYSTEM : TRANSLATION_SYSTEM;
-  const schema = isWord ? DICTIONARY_SCHEMA : TRANSLATION_SCHEMA;
+  const { reader } = deps;
+  const system = isWord ? dictionarySystem(reader) : translationSystem(reader);
+  const schema = isWord ? dictionarySchema(reader.language) : translationSchema(reader.language);
   const maxTokens = maxTokensFor(req);
   const retryDelay = deps.retryDelayMs ?? DEFAULT_RETRY_DELAY_MS;
 
@@ -101,10 +105,9 @@ export async function performLookup(req: LookupRequest, deps: LookupDeps): Promi
       return { ok: false, error: { code: e.code, message: e.message, status: e.status } };
     }
 
-    // Arabic stays fixed here until the reader's language is passed in (next task).
     const validated = isWord
-      ? validateDictionary(json, req.passage, req.selectedIndices, 'ar')
-      : validateTranslation(json, req.passage, 'ar');
+      ? validateDictionary(json, req.passage, req.selectedIndices, reader.language)
+      : validateTranslation(json, req.passage, reader.language);
     if (validated.ok) {
       log.info('lookup_ok', { kind: req.kind, attempt, ms: Date.now() - started });
       await deps.cache.set(key, validated.card);

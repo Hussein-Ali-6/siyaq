@@ -3,6 +3,7 @@ import { buildWordPassage } from '@/lib/text/tokens';
 import { cacheKeyFor, performLookup, type LookupDeps } from '@/lib/llm/lookup';
 import { LlmError } from '@/lib/llm/types';
 import type { Card, LookupRequest } from '@/lib/types';
+import type { Reader } from '@/lib/llm/prompts';
 
 const page = { url: 'https://example.com/a', title: 'A title', siteName: 'Example' };
 
@@ -26,13 +27,18 @@ const goodAnswer = {
   otherMeanings: [],
 };
 
-function fakeDeps(answers: Array<unknown | Error>): LookupDeps & { calls: number; store: Map<string, Card> } {
+function fakeDeps(
+  answers: Array<unknown | Error>,
+  reader: Reader = { language: 'ar', level: 'C1' },
+): LookupDeps & { calls: number; store: Map<string, Card>; systems: string[] } {
   const store = new Map<string, Card>();
   const deps = {
     calls: 0,
     store,
+    systems: [] as string[],
     client: {
-      async callStructured() {
+      async callStructured(args: { system: string }) {
+        deps.systems.push(args.system);
         const next = answers[deps.calls++];
         if (next instanceof Error) throw next;
         return { json: next, stopReason: 'end_turn' };
@@ -46,6 +52,7 @@ function fakeDeps(answers: Array<unknown | Error>): LookupDeps & { calls: number
       },
     },
     getSummary: async () => null,
+    reader,
     retryDelayMs: 0,
     modelId: 'anthropic:claude-sonnet-5-5',
   };
@@ -61,6 +68,21 @@ describe('cacheKeyFor', () => {
 });
 
 describe('performLookup', () => {
+  it('asks for the reader\'s language and level and records the language on the card', async () => {
+    const spanish = { ...goodAnswer, translation: 'rechazar', sentenceTranslation: 'Rechazaron la oferta.' };
+    const deps = fakeDeps([spanish], { language: 'es', level: 'B2' });
+    const res = await performLookup(wordRequest(), deps);
+    expect(res.ok && res.card.language).toBe('es');
+    expect(deps.systems[0]).toContain('a native speaker of Spanish who reads English at about B2 level');
+  });
+
+  it('accepts an answer without translations when the reader chose English only', async () => {
+    const { translation: _t, sentenceTranslation: _s, ...bare } = goodAnswer;
+    const deps = fakeDeps([bare], { language: 'none', level: 'B2' });
+    const res = await performLookup(wordRequest(), deps);
+    expect(res.ok && res.card.language).toBe('none');
+  });
+
   it('returns a validated card and caches it', async () => {
     const deps = fakeDeps([goodAnswer]);
     const res = await performLookup(wordRequest(), deps);

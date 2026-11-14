@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { performSummary, type SummaryDeps } from '@/lib/llm/summary';
 import type { Summary } from '@/lib/types';
 
-function fakeDeps(answers: unknown[], delayMs = 0): SummaryDeps & { calls: number; store: Map<string, Summary> } {
+function fakeDeps(answers: unknown[], delayMs = 0, language = 'ar'): SummaryDeps & { calls: number; store: Map<string, Summary> } {
   const store = new Map<string, Summary>();
   const deps = {
     calls: 0,
@@ -21,6 +21,7 @@ function fakeDeps(answers: unknown[], delayMs = 0): SummaryDeps & { calls: numbe
         store.set(url, s);
       },
     },
+    language,
     retryDelayMs: 0,
   };
   return deps;
@@ -30,6 +31,12 @@ const input = { url: 'https://example.com/a', title: 'T', siteName: 'S', text: '
 const good = { english: 'A short summary.', translation: 'ملخص قصير.' };
 
 describe('performSummary', () => {
+  it('writes an English-only summary when the reader chose no translation', async () => {
+    const deps = fakeDeps([{ english: 'A short summary.' }], 0, 'none');
+    const res = await performSummary({ ...input, url: 'https://example.com/e' }, deps);
+    expect(res.ok && res.summary).toEqual({ language: 'none', english: 'A short summary.' });
+  });
+
   it('summarises, validates and caches', async () => {
     const deps = fakeDeps([good]);
     const res = await performSummary(input, deps);

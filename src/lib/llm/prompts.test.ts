@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { buildSentencePassage, buildWordPassage } from '@/lib/text/tokens';
 import {
-  DICTIONARY_SYSTEM,
-  SUMMARY_SYSTEM,
-  TRANSLATION_SYSTEM,
+  dictionarySystem,
   dictionaryUserMessage,
   pageContextBlock,
+  summarySystem,
   summaryUserMessage,
+  translationSystem,
   translationUserMessage,
+  type Reader,
 } from '@/lib/llm/prompts';
 import type { LookupRequest } from '@/lib/types';
 
@@ -20,19 +21,77 @@ function wordRequest(): LookupRequest {
   return { kind: 'word', page, paragraph: 'Some paragraph text.', selection: 'turned', passage, selectedIndices };
 }
 
+const arabicC1: Reader = { language: 'ar', level: 'C1' };
+const spanishB2: Reader = { language: 'es', level: 'B2' };
+
 describe('system prompts', () => {
   it('are long enough to be cached and contain worked examples with empty lists', () => {
-    expect(DICTIONARY_SYSTEM.length).toBeGreaterThan(3000);
-    expect(DICTIONARY_SYSTEM).toContain('"notes": []');
-    expect(DICTIONARY_SYSTEM).not.toContain('translationNote');
-    expect(DICTIONARY_SYSTEM).toContain('"ipaUk"');
-    expect(DICTIONARY_SYSTEM).toContain('"ipaUs"');
-    expect(DICTIONARY_SYSTEM).not.toContain('does not want pronunciation');
-    expect(DICTIONARY_SYSTEM).not.toContain('at most two notes');
-    expect(DICTIONARY_SYSTEM).toContain('"combinations": []');
-    expect(TRANSLATION_SYSTEM).toContain('"keyExpressions": []');
-    expect(TRANSLATION_SYSTEM).toContain('"plainEnglish": ""');
-    expect(SUMMARY_SYSTEM.length).toBeGreaterThan(200);
+    const dictionary = dictionarySystem(arabicC1);
+    expect(dictionary.length).toBeGreaterThan(3000);
+    expect(dictionary).toContain('"notes": []');
+    expect(dictionary).toContain('"ipaUk"');
+    expect(dictionary).toContain('"ipaUs"');
+    expect(dictionary).toContain('"combinations": []');
+    expect(translationSystem(arabicC1)).toContain('"keyExpressions": []');
+    expect(translationSystem(arabicC1)).toContain('"plainEnglish": ""');
+    expect(summarySystem('ar').length).toBeGreaterThan(200);
+  });
+
+  it('describe the reader from the settings', () => {
+    expect(dictionarySystem(spanishB2)).toContain('a native speaker of Spanish who reads English at about B2 level');
+    expect(translationSystem({ language: 'x:Kurdish', level: 'B1' })).toContain('a native speaker of Kurdish who reads English at about B1 level');
+    expect(dictionarySystem({ language: 'none', level: 'C1' })).toContain('wants explanations in English only');
+  });
+
+  it('name the language in the field rules and ask for its written standard', () => {
+    expect(dictionarySystem(spanishB2)).toContain('- translation: the Spanish for this sense');
+    expect(dictionarySystem(spanishB2)).toContain('- sentenceTranslation: a natural Spanish translation');
+    expect(translationSystem(arabicC1)).toContain('in Modern Standard Arabic');
+    expect(translationSystem({ language: 'es', level: 'C1' })).not.toContain('Modern Standard');
+    expect(summarySystem('ar')).toContain('natural Modern Standard Arabic');
+    expect(summarySystem('ja')).toContain('natural Japanese');
+  });
+
+  it('contain no Arabic text and no fixed language', () => {
+    const all = [dictionarySystem(spanishB2), translationSystem(spanishB2), summarySystem('es')].join('\n');
+    expect(all).not.toMatch(/\p{Script=Arabic}/u);
+    expect(all).not.toContain('Arabic');
+  });
+
+  it('say after the examples that the translation fields are still required', () => {
+    expect(dictionarySystem(spanishB2)).toContain('Your answer must include them, written in Spanish');
+    expect(translationSystem(spanishB2)).toContain('Your answer must include them, written in Spanish');
+  });
+
+  it('leave translation fields out for English only and always ask for plainer English', () => {
+    const dictionary = dictionarySystem({ language: 'none', level: 'B2' });
+    const sentence = translationSystem({ language: 'none', level: 'B2' });
+    for (const text of [dictionary, sentence, summarySystem('none')]) {
+      expect(text).not.toContain('translation:');
+      expect(text).not.toContain('sentenceTranslation');
+      expect(text).not.toContain('Your answer must include them');
+    }
+    expect(sentence).toContain('Always give it');
+    expect(sentence).not.toContain('"plainEnglish": ""');
+  });
+
+  it('keep the original wording for an advanced reader', () => {
+    expect(dictionarySystem(arabicC1)).toContain('Most cards have none.');
+    expect(dictionarySystem(arabicC1)).toContain('Basic grammar a C1 reader already knows, word history and background facts are not notes');
+    expect(translationSystem(arabicC1)).toContain('that a C1 reader could plausibly misread');
+    expect(translationSystem(arabicC1)).toContain('Leave it empty when the selection is clear.');
+  });
+
+  it('explain more for lower levels', () => {
+    expect(translationSystem({ language: 'es', level: 'B1' })).toContain('Always give it');
+    expect(translationSystem({ language: 'es', level: 'B1' })).toContain('a B1 reader may not know');
+    expect(translationSystem(spanishB2)).toContain('a B2 reader may not know');
+    expect(dictionarySystem({ language: 'es', level: 'B1' })).toContain('very common words');
+    expect(dictionarySystem({ language: 'es', level: 'B1' })).not.toContain('C1 reader');
+  });
+
+  it('return the same text for the same settings', () => {
+    expect(dictionarySystem({ language: 'fa', level: 'B1' })).toBe(dictionarySystem({ language: 'fa', level: 'B1' }));
   });
 });
 
