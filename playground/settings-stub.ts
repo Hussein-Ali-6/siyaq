@@ -79,12 +79,20 @@ function pick(keys: unknown): Record<string, unknown> {
     local: {
       get: async (keys: unknown) => pick(keys),
       set: async (items: Record<string, unknown>) => {
+        const changes: Record<string, { oldValue?: unknown; newValue: unknown }> = {};
+        for (const [k, v] of Object.entries(items)) {
+          changes[k] = { ...(k in store ? { oldValue: store[k] } : {}), newValue: structuredClone(v) };
+        }
         Object.assign(store, structuredClone(items));
-        onChanged.fire(items, 'local');
+        onChanged.fire(changes, 'local');
       },
       remove: async (keys: string | string[]) => {
-        for (const k of typeof keys === 'string' ? [keys] : keys) delete store[k];
-        onChanged.fire({}, 'local');
+        const changes: Record<string, { oldValue: unknown }> = {};
+        for (const k of typeof keys === 'string' ? [keys] : keys) {
+          if (k in store) changes[k] = { oldValue: store[k] };
+          delete store[k];
+        }
+        onChanged.fire(changes, 'local');
       },
     },
     onChanged,

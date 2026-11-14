@@ -92,6 +92,16 @@ export function otherLanguageId(name: string): string | null {
   return clean ? OTHER_PREFIX + clean : null;
 }
 
+/** The id for a language name typed by the reader: the listed language when the name is one of the list's names, English only for "English", otherwise a typed language. Null when the name is empty. */
+export function languageIdFromName(name: string): string | null {
+  const typed = otherLanguageId(name);
+  if (!typed) return null;
+  const clean = typed.slice(OTHER_PREFIX.length).toLowerCase();
+  if (clean === 'english') return NO_TRANSLATION;
+  const match = LANGUAGES.find((l) => l.englishName.toLowerCase() === clean || l.nativeName.toLowerCase() === clean);
+  return match ? match.id : typed;
+}
+
 /** Details of a listed or typed language. Not meant for "none". An unknown code is treated as a typed name. */
 export function resolveLanguage(id: string): ResolvedLanguage {
   const listed = byId.get(id.toLowerCase());

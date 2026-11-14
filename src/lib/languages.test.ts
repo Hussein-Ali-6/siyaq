@@ -4,6 +4,7 @@ import {
   NO_TRANSLATION,
   hasScript,
   languageFromBrowser,
+  languageIdFromName,
   languageLabel,
   languageName,
   otherLanguageId,
@@ -121,5 +122,19 @@ describe('languageFromBrowser', () => {
     ['', 'none'],
   ])('%s gives %s', (uiLanguage, id) => {
     expect(languageFromBrowser(uiLanguage)).toBe(id);
+  });
+});
+
+describe('languageIdFromName', () => {
+  it('matches listed names, English only, typed names and empty input', () => {
+    expect(languageIdFromName('Arabic')).toBe('ar');
+    expect(languageIdFromName('  arabic ')).toBe('ar');
+    expect(languageIdFromName('العربية')).toBe('ar');
+    expect(languageIdFromName('Español')).toBe('es');
+    expect(languageIdFromName('English')).toBe('none');
+    expect(languageIdFromName('Kurdish')).toBe('x:Kurdish');
+    expect(languageIdFromName('Malayalam')).toBe('x:Malayalam');
+    expect(languageIdFromName('')).toBeNull();
+    expect(languageIdFromName('   ')).toBeNull();
   });
 });

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { browser } from 'wxt/browser';
-import { LANGUAGES, NO_TRANSLATION, otherLanguageId, otherLanguageName } from '@/lib/languages';
+import { LANGUAGES, NO_TRANSLATION, languageIdFromName, otherLanguageName } from '@/lib/languages';
 import { getPrefs, setPrefs } from '@/lib/storage/settings';
 import type { Level, Prefs } from '@/lib/types';
 
@@ -45,20 +45,20 @@ export function ReadingSection() {
     }
     setOther((o) => ({ ...o, open: true }));
     // With an empty box nothing is saved and the previous choice stays.
-    const id = otherLanguageId(other.text);
+    const id = languageIdFromName(other.text);
     if (id) void setPrefs({ language: id });
   };
 
   const typeOther = (text: string) => {
     setOther({ open: true, text });
-    const id = otherLanguageId(text);
+    const id = languageIdFromName(text);
     if (id) void setPrefs({ language: id });
   };
 
   return (
     <div className="space-y-4 text-[13px]">
       <label className="block space-y-1.5">
-        <span className="font-medium">Translate into</span>
+        <span className="block font-medium">Translate into</span>
         <select className="input max-w-[360px]" value={choice} onChange={(e) => choose(e.target.value)}>
           <option value={NO_TRANSLATION}>English only (no translation)</option>
           {LANGUAGES.map((l) => (
@@ -72,7 +72,7 @@ export function ReadingSection() {
 
       {choice === OTHER && (
         <label className="block space-y-1.5">
-          <span className="text-muted">Language name in English, for example Kurdish</span>
+          <span className="block text-muted">Language name in English, for example Kurdish</span>
           <input className="input max-w-[360px]" value={other.text} maxLength={40} onChange={(e) => typeOther(e.target.value)} />
         </label>
       )}
