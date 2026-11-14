@@ -8,6 +8,7 @@ import {
   getPrefs,
   getProviderKey,
   getProviderSettings,
+  prefsFromStored,
   setActiveProvider,
   setApiKey,
   setChatGptAuth,
@@ -38,6 +39,36 @@ describe('prefs', () => {
     expect(await setPrefs({ theme: 'light' })).toEqual({ theme: 'light', language: 'none', level: 'B2' });
     expect(await setPrefs({ language: 'es', level: 'C1' })).toEqual({ theme: 'light', language: 'es', level: 'C1' });
     expect(await getPrefs()).toEqual({ theme: 'light', language: 'es', level: 'C1' });
+  });
+});
+
+describe('prefsFromStored', () => {
+  it('fills in the defaults for what is not stored', () => {
+    expect(prefsFromStored(undefined)).toEqual({ theme: 'dark', language: 'none', level: 'B2' });
+    expect(prefsFromStored({ theme: 'light' })).toEqual({ theme: 'light', language: 'none', level: 'B2' });
+  });
+
+  it('keeps stored values that are usable', () => {
+    expect(prefsFromStored({ theme: 'light', language: 'ar', level: 'C1' })).toEqual({ theme: 'light', language: 'ar', level: 'C1' });
+    expect(prefsFromStored({ language: 'x:Kurdish', level: 'B1' })).toEqual({ theme: 'dark', language: 'x:Kurdish', level: 'B1' });
+  });
+
+  it.each([['A2'], ['c1'], [''], [2], [null]])('falls back to the default level for %j', (level) => {
+    expect(prefsFromStored({ theme: 'light', language: 'es', level })).toEqual({ theme: 'light', language: 'es', level: 'B2' });
+  });
+
+  it.each([[''], ['   '], [5], [null], [['ar']]])('falls back to the default language for %j', (language) => {
+    expect(prefsFromStored({ language, level: 'C1' })).toEqual({ theme: 'dark', language: 'none', level: 'C1' });
+  });
+
+  it('treats a stored value that is not an object as nothing stored', () => {
+    expect(prefsFromStored('ar')).toEqual({ theme: 'dark', language: 'none', level: 'B2' });
+    expect(prefsFromStored(null)).toEqual({ theme: 'dark', language: 'none', level: 'B2' });
+  });
+
+  it('is what getPrefs returns, so a bad stored value never reaches a prompt', async () => {
+    await fakeBrowser.storage.local.set({ prefs: { theme: 'light', language: '', level: 'C2' } });
+    expect(await getPrefs()).toEqual({ theme: 'light', language: 'none', level: 'B2' });
   });
 });
 

@@ -17,7 +17,7 @@ import {
   setCachedSummary,
   trimCaches,
 } from '@/lib/storage/cache';
-import { prepareStorage } from '@/lib/storage/migrate';
+import { prepareStorageWithRetry } from '@/lib/storage/migrate';
 import { isSaved, removeSaved, saveItem } from '@/lib/storage/saved';
 import { getPrefs, getProviderSettings } from '@/lib/storage/settings';
 import type { Card } from '@/lib/types';
@@ -43,19 +43,19 @@ export default defineBackground(() => {
     return { language, level };
   };
 
-  browser.runtime.onInstalled.addListener(({ reason }) => {
+  browser.runtime.onInstalled.addListener((details) => {
+    // The gate is assigned before anything else here. The step retries once, never rejects, and asks
+    // for the browser language only when it has to choose a starting language.
+    storageReady = prepareStorageWithRetry(details, () => browser.i18n.getUILanguage()).then((prepared) => {
+      if (!prepared) log.warn('prepare_storage_failed');
+    });
+    // The settings are stored before the options page opens, so it shows the starting language at once.
+    void storageReady.then(() => {
+      if (details.reason === 'install') void browser.runtime.openOptionsPage();
+    });
     // Chrome 130+: keep local storage (where keys and tokens live) out of reach of content scripts.
     const local = browser.storage.local as unknown as { setAccessLevel?: (o: { accessLevel: string }) => Promise<void> };
     local.setAccessLevel?.({ accessLevel: 'TRUSTED_CONTEXTS' }).catch(() => undefined);
-    // The settings are stored before the options page opens, so it shows the starting language at once.
-    const uiLanguage = browser.i18n.getUILanguage();
-    // It is safe to run twice, so a failure is retried once before it is logged.
-    storageReady = prepareStorage(reason, uiLanguage)
-      .catch(() => prepareStorage(reason, uiLanguage))
-      .catch(() => log.warn('prepare_storage_failed'));
-    void storageReady.then(() => {
-      if (reason === 'install') void browser.runtime.openOptionsPage();
-    });
   });
 
   onMessage('lookup', async ({ data }) => {

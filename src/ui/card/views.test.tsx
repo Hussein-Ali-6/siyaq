@@ -61,6 +61,20 @@ describe('DictionaryView', () => {
     expect(html).toContain('lang="ar"');
   });
 
+  it('shows the explanation of an old saved card that has no translation', () => {
+    const noteOnly: DictionaryCard = { ...word, translation: '', translationNote: 'لم يقبل عرضًا' };
+    const html = renderToStaticMarkup(<DictionaryView card={noteOnly} sentence="They turned the offer down." />);
+    expect(html).toContain('<p class="text-[14px] leading-relaxed">لم يقبل عرضًا</p>');
+    // No empty paragraph where the translation would be.
+    expect(html).not.toContain('<p class="text-[16px] font-medium">');
+  });
+
+  it('shows the translation and the explanation when an old saved card has both', () => {
+    const html = renderToStaticMarkup(<DictionaryView card={{ ...word, translationNote: 'لم يقبل عرضًا' }} sentence="They turned the offer down." />);
+    expect(html).toContain('<p class="text-[16px] font-medium">رفض</p>');
+    expect(html).toContain('لم يقبل عرضًا');
+  });
+
   it('shows no translation rows for an English-only card', () => {
     const html = renderToStaticMarkup(<DictionaryView card={englishOnlyWord} sentence="They turned the offer down." />);
     expect(html).not.toContain('translated');

@@ -23,12 +23,12 @@ export function SentenceText({ segments, sentence }: { segments?: Segment[]; sen
   return <>{sentence}</>;
 }
 
-/** This sense in the reader's language. Cards saved while the explanation was separate also show it. */
+/** This sense in the reader's language. Cards saved while the explanation was separate also show it, and some of them have only the explanation. */
 export function TranslatedMeaning({ card, className = '' }: { card: DictionaryCard; className?: string }) {
-  if (!card.translation) return null;
+  if (!card.translation && !card.translationNote) return null;
   return (
     <Translated as="div" language={card.language} className={className}>
-      <p className="text-[16px] font-medium">{card.translation}</p>
+      {card.translation && <p className="text-[16px] font-medium">{card.translation}</p>}
       {card.translationNote && <p className="text-[14px] leading-relaxed">{card.translationNote}</p>}
     </Translated>
   );

@@ -3,7 +3,7 @@ import type { ChatGptAuth } from '@/lib/auth/chatgpt-oauth';
 import { DEFAULT_ANTHROPIC_MODEL } from '@/lib/llm/anthropic';
 import { isProviderId } from '@/lib/llm/providers';
 import type { ProviderId, Thinking } from '@/lib/llm/types';
-import { DEFAULT_PREFS, type Prefs } from '@/lib/types';
+import { DEFAULT_PREFS, type Level, type Prefs } from '@/lib/types';
 
 /**
  * Read only by the service worker and extension pages, never by content scripts. Keys and tokens
@@ -92,10 +92,25 @@ export async function clearChatGptTokens(): Promise<void> {
   await setChatGptAuth({ hostId, port, ...(clientId ? { clientId } : {}), ...(email ? { email } : {}) });
 }
 
+const isLevel = (value: unknown): value is Level => value === 'B1' || value === 'B2' || value === 'C1';
+
+/**
+ * The preferences to use for a stored value: defaults for what is missing, and the default level or
+ * language in place of a stored one that is not usable, so a bad value can never reach a prompt.
+ */
+export function prefsFromStored(stored: unknown): Prefs {
+  const given = (typeof stored === 'object' && stored !== null ? stored : {}) as Partial<Record<keyof Prefs, unknown>>;
+  return {
+    ...DEFAULT_PREFS,
+    ...(given as Partial<Prefs>),
+    language: typeof given.language === 'string' && given.language.trim() ? given.language : DEFAULT_PREFS.language,
+    level: isLevel(given.level) ? given.level : DEFAULT_PREFS.level,
+  };
+}
+
 export async function getPrefs(): Promise<Prefs> {
   const result = await browser.storage.local.get(PREFS);
-  const stored = (result[PREFS] ?? {}) as Partial<Prefs>;
-  return { ...DEFAULT_PREFS, ...stored };
+  return prefsFromStored(result[PREFS]);
 }
 
 export async function setPrefs(update: Partial<Prefs>): Promise<Prefs> {
