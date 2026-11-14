@@ -96,12 +96,30 @@ describe('export', () => {
     ];
     const csv = toCsv(items);
     const lines = csv.split('\n');
-    expect(lines[0]).toBe('kind,headword,ipa_uk,ipa_us,arabic,meaning,sentence,translation,page,url,saved');
+    expect(lines[0]).toBe('kind,headword,ipa_uk,ipa_us,translation,meaning,sentence,sentence_translation,language,page,url,saved');
     expect(lines[1]).toContain(',tɛst,test,');
     expect(lines[1]).toContain('قال — شرح قال');
     expect(lines[1]).toContain('"say ""hi"""');
-    expect(lines[1]).toContain('2026-10-16');
+    expect(lines[1]).toContain(',جملة,Arabic,Page,https://example.com/p,2026-10-16');
     expect(JSON.parse(toJson(items))).toHaveLength(1);
+  });
+
+  it('puts a sentence translation in its own column and names the language', () => {
+    const sentence = (language: string, translation?: string): SavedItem => ({
+      id: language,
+      kind: 'sentence',
+      card: { kind: 'sentence', language, ...(translation ? { translation } : {}), plainEnglish: 'The deal failed.', keyExpressions: [] },
+      selection: 'The deal fell through.',
+      sentence: 'The deal fell through.',
+      sentenceSegments: [{ text: 'The deal fell through.' }],
+      pageTitle: 'News',
+      url: 'https://example.com/n',
+      savedAt: Date.UTC(2026, 10, 13),
+    });
+    const lines = toCsv([sentence('es', 'El acuerdo fracasó.'), sentence('x:Kurdish', 'Peyman têk çû.'), sentence('none')]).split('\n');
+    expect(lines[1]).toBe('sentence,,,,,The deal failed.,The deal fell through.,El acuerdo fracasó.,Spanish,News,https://example.com/n,2026-11-13');
+    expect(lines[2]).toContain(',Peyman têk çû.,Kurdish,News,');
+    expect(lines[3]).toBe('sentence,,,,,The deal failed.,The deal fell through.,,English only,News,https://example.com/n,2026-11-13');
   });
 });
 

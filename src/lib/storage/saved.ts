@@ -1,5 +1,6 @@
 import { browser } from 'wxt/browser';
 import type { DictionaryCard, SavedItem } from '@/lib/types';
+import { languageName } from '@/lib/languages';
 import { migrateSavedItem } from '@/lib/storage/migrate';
 
 const KEY = 'saved';
@@ -32,7 +33,7 @@ export async function isSaved(id: string): Promise<boolean> {
   return (await readAll()).some((i) => i.id === id);
 }
 
-/** Lowercases Latin text and folds Arabic diacritics and letter variants so searches are forgiving. */
+/** Lowercases text and folds Arabic diacritics and letter variants so searches are forgiving. */
 export function foldText(text: string): string {
   return text
     .toLowerCase()
@@ -75,16 +76,17 @@ function csvCell(value: string): string {
   return /[",\n\r]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
 }
 
-export const CSV_HEADER = ['kind', 'headword', 'ipa_uk', 'ipa_us', 'arabic', 'meaning', 'sentence', 'translation', 'page', 'url', 'saved'];
+export const CSV_HEADER = ['kind', 'headword', 'ipa_uk', 'ipa_us', 'translation', 'meaning', 'sentence', 'sentence_translation', 'language', 'page', 'url', 'saved'];
 
 export function toCsv(items: SavedItem[]): string {
   const rows = items.map((item) => {
     const saved = new Date(item.savedAt).toISOString().slice(0, 10);
+    // A word's translation and its sentence's translation each have a column; a sentence item uses only the second.
     const cells =
       item.card.kind === 'word'
         ? ['word', item.card.headword, item.card.ipaUk ?? '', item.card.ipaUs ?? '', translationText(item.card), item.card.meaning, item.sentence, item.card.sentenceTranslation ?? '']
         : ['sentence', '', '', '', '', item.card.plainEnglish, item.selection, item.card.translation ?? ''];
-    return [...cells, item.pageTitle, item.url, saved].map(csvCell).join(',');
+    return [...cells, languageName(item.card.language), item.pageTitle, item.url, saved].map(csvCell).join(',');
   });
   return [CSV_HEADER.join(','), ...rows].join('\n');
 }

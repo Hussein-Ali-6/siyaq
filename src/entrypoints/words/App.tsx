@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { browser } from 'wxt/browser';
+import { languageLabel } from '@/lib/languages';
 import { listSaved, removeSaved, searchSaved, toCsv, toJson } from '@/lib/storage/saved';
 import type { SavedItem } from '@/lib/types';
 import { SentenceText, TranslatedMeaning } from '@/ui/card/DictionaryView';
@@ -52,6 +53,8 @@ export function App() {
   }, [items, query, filter]);
 
   const counts = { all: items.length, word: items.filter((i) => i.kind === 'word').length, sentence: items.filter((i) => i.kind === 'sentence').length };
+  // The language is shown on each item only when the list mixes languages.
+  const showLanguage = new Set(items.map((i) => i.card.language)).size > 1;
   const stamp = new Date().toISOString().slice(0, 10);
 
   return (
@@ -71,7 +74,7 @@ export function App() {
       </header>
 
       <div className="mb-5 flex flex-wrap items-center gap-3">
-        <input className="input max-w-[360px]" placeholder="Search in English or Arabic…" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <input className="input max-w-[360px]" placeholder="Search your words…" value={query} onChange={(e) => setQuery(e.target.value)} />
         <div className="flex rounded-lg border border-border bg-surface p-0.5 text-[13px]">
           {(['all', 'word', 'sentence'] as const).map((f) => (
             <button
@@ -135,6 +138,7 @@ export function App() {
                       <ExternalIcon /> <span className="max-w-[320px] truncate">{item.pageTitle || item.url}</span>
                     </a>
                     <span>{new Date(item.savedAt).toLocaleDateString()}</span>
+                    {showLanguage && <span>{languageLabel(item.card.language)}</span>}
                     {item.card.kind === 'word' && <LookupLinks headword={item.card.headword} />}
                   </p>
                 </div>
