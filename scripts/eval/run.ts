@@ -133,7 +133,7 @@ function flags(sel: Selection, card: Card): string[] {
     for (const n of card.notes) if (FORBIDDEN_NOTE.test(n)) out.push(`forbidden note topic: ${n}`);
     if (card.examples.length !== 2) out.push(`examples: ${card.examples.length}`);
     if (/^(here|in this sentence)/i.test(card.meaning)) out.push('meaning retells the sentence');
-    if (words(card.arabic) > 25) out.push(`Arabic is long (${words(card.arabic)} words)`);
+    if (words(card.translation ?? '') > 25) out.push(`translation is long (${words(card.translation ?? '')} words)`);
     if (!card.ipaUk || !card.ipaUs) out.push('missing IPA');
   } else {
     if (e.plain === 'none' && card.plainEnglish) out.push(`unexpected plain English: ${card.plainEnglish}`);
@@ -152,18 +152,18 @@ function cardMarkdown(card: Card): string {
       `**${card.headword}** · ${card.partOfSpeech} · unit ${JSON.stringify(card.unitIndices)}`,
       `- ipa: UK /${card.ipaUk ?? ''}/ · US /${card.ipaUs ?? ''}/`,
       `- meaning: ${card.meaning}`,
-      `- arabic: ${card.arabic}`,
+      `- translation: ${card.translation}`,
       `- notes: ${card.notes.length ? card.notes.join(' | ') : '(none)'}`,
-      `- sentence (ar): ${card.sentenceArabic}`,
+      `- sentence (ar): ${card.sentenceTranslation}`,
       `- examples: ${card.examples.join(' | ')}`,
       `- combinations: ${card.combinations.length ? card.combinations.join(', ') : '(none)'}`,
-      `- other meanings: ${card.otherMeanings.length ? card.otherMeanings.map((m) => `${m.meaning} (${m.arabic})`).join(' | ') : '(none)'}`,
+      `- other meanings: ${card.otherMeanings.length ? card.otherMeanings.map((m) => `${m.meaning} (${m.translation})`).join(' | ') : '(none)'}`,
     ].join('\n');
   }
   return [
-    `- arabic: ${card.arabic}`,
+    `- translation: ${card.translation}`,
     `- plain English: ${card.plainEnglish || '(none)'}`,
-    `- key expressions: ${card.keyExpressions.length ? card.keyExpressions.map((k) => `${k.expression} ${JSON.stringify(k.indices)}: ${k.meaning} (${k.arabic})`).join(' | ') : '(none)'}`,
+    `- key expressions: ${card.keyExpressions.length ? card.keyExpressions.map((k) => `${k.expression} ${JSON.stringify(k.indices)}: ${k.meaning} (${k.translation})`).join(' | ') : '(none)'}`,
   ].join('\n');
 }
 
@@ -223,7 +223,7 @@ async function main() {
         if (!ok) flagged++;
         total++;
         console.log(`  • summary: ${n} words ${ok ? '✓' : '⚠ outside 100–150'}`);
-        report.push(`### ${ok ? '✓' : '⚠'} Summary (${n} words)`, '', res.summary.english, '', res.summary.arabic, '');
+        report.push(`### ${ok ? '✓' : '⚠'} Summary (${n} words)`, '', res.summary.english, '', res.summary.translation ?? '', '');
       } else {
         report.push(`### Summary failed: ${res.error.code} ${res.error.message}`, '');
       }

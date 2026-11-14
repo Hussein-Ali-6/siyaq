@@ -20,24 +20,24 @@ export const DICTIONARY_SCHEMA: JsonSchema = object({
   ipaUk: str,
   ipaUs: str,
   meaning: str,
-  arabic: str,
+  translation: str,
   notes: strList,
-  sentenceArabic: str,
+  sentenceTranslation: str,
   examples: strList,
   combinations: strList,
-  otherMeanings: { type: 'array', items: object({ meaning: str, arabic: str }) },
+  otherMeanings: { type: 'array', items: object({ meaning: str, translation: str }) },
 });
 
 export const TRANSLATION_SCHEMA: JsonSchema = object({
-  arabic: str,
+  translation: str,
   plainEnglish: str,
   keyExpressions: {
     type: 'array',
-    items: object({ expression: str, indices: intList, meaning: str, arabic: str }),
+    items: object({ expression: str, indices: intList, meaning: str, translation: str }),
   },
 });
 
 export const SUMMARY_SCHEMA: JsonSchema = object({
   english: str,
-  arabic: str,
+  translation: str,
 });

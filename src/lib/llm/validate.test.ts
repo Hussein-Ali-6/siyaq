@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { buildSentencePassage } from '@/lib/text/tokens';
-import { validateDictionary, validateSummary, validateTranslation } from '@/lib/llm/validate';
+import * as validate from '@/lib/llm/validate';
+import type { Passage } from '@/lib/types';
+
+// The older tests below check Arabic, the language Siyaq started with.
+const validateDictionary = (raw: unknown, p: Passage, selected: number[], language = 'ar') => validate.validateDictionary(raw, p, selected, language);
+const validateTranslation = (raw: unknown, p: Passage, language = 'ar') => validate.validateTranslation(raw, p, language);
+const validateSummary = (raw: unknown, language = 'ar') => validate.validateSummary(raw, language);
 
 // Before(1) They(2) turned(3) the(4) offer(5) down(6) After(7)
 const passage = buildSentencePassage('Before. They turned the offer down. After.');
@@ -12,12 +18,12 @@ const good = {
   ipaUs: 'ˌtɝːn ˈdaʊn',
   unitIndices: [3, 6],
   meaning: 'To refuse an offer or request.',
-  arabic: 'رفض',
+  translation: 'رفض',
   notes: [],
-  sentenceArabic: 'رفضوا العرض.',
+  sentenceTranslation: 'رفضوا العرض.',
   examples: ['She turned down the job.', 'He turned the invitation down.'],
   combinations: [],
-  otherMeanings: [{ meaning: 'To reduce the volume or power of something.', arabic: 'خفّض' }],
+  otherMeanings: [{ meaning: 'To reduce the volume or power of something.', translation: 'خفّض' }],
 };
 
 describe('validateDictionary', () => {
@@ -39,7 +45,7 @@ describe('validateDictionary', () => {
         notes: ['a', 'b', 'c'],
         combinations: Array.from({ length: 10 }, (_, i) => `combo ${i}`),
         examples: ['one', 'two', 'three'],
-        otherMeanings: Array.from({ length: 6 }, (_, i) => ({ meaning: `m${i}`, arabic: 'معنى' })),
+        otherMeanings: Array.from({ length: 6 }, (_, i) => ({ meaning: `m${i}`, translation: 'معنى' })),
       },
       passage,
       [3],
@@ -63,8 +69,8 @@ describe('validateDictionary', () => {
   });
 
   it('rejects when an Arabic field has no Arabic script', () => {
-    expect(validateDictionary({ ...good, arabic: 'refuse' }, passage, [3]).ok).toBe(false);
-    expect(validateDictionary({ ...good, sentenceArabic: 'They refused.' }, passage, [3]).ok).toBe(false);
+    expect(validateDictionary({ ...good, translation: 'refuse' }, passage, [3]).ok).toBe(false);
+    expect(validateDictionary({ ...good, sentenceTranslation: 'They refused.' }, passage, [3]).ok).toBe(false);
   });
 
   it('rejects when the unit does not include the selected word', () => {
@@ -90,9 +96,9 @@ describe('validateDictionary', () => {
 
   it('accepts an Arabic field that adds a short clarification', () => {
     const arabic = 'قلّة قليلة (أي أن معظمهم لم يصدّق)';
-    const r = validateDictionary({ ...good, arabic }, passage, [3]);
+    const r = validateDictionary({ ...good, translation: arabic }, passage, [3]);
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.card.arabic).toBe(arabic);
+    if (r.ok) expect(r.card.translation).toBe(arabic);
   });
 
   it('keeps the British and American IPA without surrounding slashes or brackets', () => {
@@ -115,7 +121,7 @@ describe('validateDictionary', () => {
   });
 
   it('rejects an empty Arabic field', () => {
-    expect(validateDictionary({ ...good, arabic: '' }, passage, [3]).ok).toBe(false);
+    expect(validateDictionary({ ...good, translation: '' }, passage, [3]).ok).toBe(false);
   });
 
   it('keeps combinations for a single-word headword', () => {
@@ -126,21 +132,21 @@ describe('validateDictionary', () => {
 
   it('drops other meanings whose Arabic is missing', () => {
     const r = validateDictionary(
-      { ...good, otherMeanings: [{ meaning: 'ok', arabic: 'حسن' }, { meaning: 'bad', arabic: '' }] },
+      { ...good, otherMeanings: [{ meaning: 'ok', translation: 'حسن' }, { meaning: 'bad', translation: '' }] },
       passage,
       [3],
     );
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.card.otherMeanings).toEqual([{ meaning: 'ok', arabic: 'حسن' }]);
+    if (r.ok) expect(r.card.otherMeanings).toEqual([{ meaning: 'ok', translation: 'حسن' }]);
   });
 });
 
 // The(1) deal(2) fell(3) through(4) at(5) the(6) last(7) minute(8)
 const tPassage = buildSentencePassage('The deal fell through at the last minute.');
 const tGood = {
-  arabic: 'فشلت الصفقة في اللحظة الأخيرة.',
+  translation: 'فشلت الصفقة في اللحظة الأخيرة.',
   plainEnglish: '',
-  keyExpressions: [{ expression: 'fell through', indices: [3, 4], meaning: 'To fail to happen.', arabic: 'فشل' }],
+  keyExpressions: [{ expression: 'fell through', indices: [3, 4], meaning: 'To fail to happen.', translation: 'فشل' }],
 };
 
 describe('validateTranslation', () => {
@@ -155,7 +161,7 @@ describe('validateTranslation', () => {
   });
 
   it('drops key expressions with invalid indices and trims to three', () => {
-    const ke = (i: number[]) => ({ expression: 'x', indices: i, meaning: 'm', arabic: 'ع' });
+    const ke = (i: number[]) => ({ expression: 'x', indices: i, meaning: 'm', translation: 'ع' });
     const r = validateTranslation({ ...tGood, keyExpressions: [ke([1]), ke([99]), ke([2]), ke([3]), ke([4])] }, tPassage);
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.card.keyExpressions.map((k) => k.indices)).toEqual([[1], [2], [3]]);
@@ -163,7 +169,7 @@ describe('validateTranslation', () => {
 
   it('drops key expressions whose Arabic is not Arabic', () => {
     const r = validateTranslation(
-      { ...tGood, keyExpressions: [{ expression: 'x', indices: [1], meaning: 'm', arabic: 'latin' }] },
+      { ...tGood, keyExpressions: [{ expression: 'x', indices: [1], meaning: 'm', translation: 'latin' }] },
       tPassage,
     );
     expect(r.ok).toBe(true);
@@ -171,20 +177,98 @@ describe('validateTranslation', () => {
   });
 
   it('rejects when the translation is empty or not Arabic', () => {
-    expect(validateTranslation({ ...tGood, arabic: '' }, tPassage).ok).toBe(false);
-    expect(validateTranslation({ ...tGood, arabic: 'The deal failed.' }, tPassage).ok).toBe(false);
+    expect(validateTranslation({ ...tGood, translation: '' }, tPassage).ok).toBe(false);
+    expect(validateTranslation({ ...tGood, translation: 'The deal failed.' }, tPassage).ok).toBe(false);
   });
 });
 
 describe('validateSummary', () => {
   it('accepts english and arabic text', () => {
-    const r = validateSummary({ english: 'An article about things.', arabic: 'مقال عن أشياء.' });
+    const r = validateSummary({ english: 'An article about things.', translation: 'مقال عن أشياء.' });
     expect(r.ok).toBe(true);
   });
 
   it('rejects missing or non-Arabic fields', () => {
-    expect(validateSummary({ english: 'x', arabic: 'not arabic' }).ok).toBe(false);
-    expect(validateSummary({ english: '', arabic: 'عربي' }).ok).toBe(false);
+    expect(validateSummary({ english: 'x', translation: 'not arabic' }).ok).toBe(false);
+    expect(validateSummary({ english: '', translation: 'عربي' }).ok).toBe(false);
     expect(validateSummary({}).ok).toBe(false);
+  });
+});
+
+describe('translation language rules', () => {
+  const spanish = {
+    ...good,
+    translation: 'rechazar',
+    sentenceTranslation: 'Rechazaron la oferta.',
+    otherMeanings: [{ meaning: 'To reduce the volume.', translation: 'bajar' }],
+  };
+
+  it('records the language on every result', () => {
+    const d = validateDictionary(good, passage, [3]);
+    const t = validateTranslation(tGood, tPassage);
+    const s = validateSummary({ english: 'A summary.', translation: 'ملخص.' });
+    expect(d.ok && d.card.language).toBe('ar');
+    expect(t.ok && t.card.language).toBe('ar');
+    expect(s.ok && s.card.language).toBe('ar');
+  });
+
+  it('accepts Latin-script languages without a script check, but not empty text', () => {
+    expect(validateDictionary(spanish, passage, [3], 'es').ok).toBe(true);
+    expect(validateDictionary({ ...spanish, translation: ' ' }, passage, [3], 'es').ok).toBe(false);
+    const { sentenceTranslation: _s, ...missing } = spanish;
+    expect(validateDictionary(missing, passage, [3], 'es').ok).toBe(false);
+  });
+
+  it('checks the script of languages that have their own', () => {
+    expect(validateSummary({ english: 'A summary.', translation: '要約です。' }, 'ja').ok).toBe(true);
+    expect(validateSummary({ english: 'A summary.', translation: 'A summary.' }, 'ja').ok).toBe(false);
+    expect(validateSummary({ english: 'A summary.', translation: 'خلاصه.' }, 'fa').ok).toBe(true);
+    expect(validateSummary({ english: 'A summary.', translation: 'Краткое содержание.' }, 'ar').ok).toBe(false);
+  });
+
+  it('says which language a rejected field must be in', () => {
+    const r = validateSummary({ english: 'A summary.', translation: 'A summary.' }, 'ko');
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe('translation: must be written in Korean');
+  });
+
+  it('only asks a typed language for non-empty text', () => {
+    expect(validateSummary({ english: 'A summary.', translation: 'Kurteyek.' }, 'x:Kurdish').ok).toBe(true);
+    expect(validateSummary({ english: 'A summary.', translation: '' }, 'x:Kurdish').ok).toBe(false);
+  });
+});
+
+describe('English only', () => {
+  it('leaves translation fields out of a word card, even when the model sent them', () => {
+    const r = validateDictionary(good, passage, [3], 'none');
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.card.language).toBe('none');
+      expect(r.card).not.toHaveProperty('translation');
+      expect(r.card).not.toHaveProperty('sentenceTranslation');
+      expect(r.card.otherMeanings).toEqual([{ meaning: 'To reduce the volume or power of something.' }]);
+    }
+  });
+
+  it('accepts a word card that has no translation fields', () => {
+    const { translation: _t, sentenceTranslation: _s, ...bare } = good;
+    expect(validateDictionary({ ...bare, otherMeanings: [{ meaning: 'Another sense.' }] }, passage, [3], 'none').ok).toBe(true);
+  });
+
+  it('requires the plainer English of a sentence card and drops translations', () => {
+    expect(validateTranslation(tGood, tPassage, 'none').ok).toBe(false);
+    const r = validateTranslation({ ...tGood, plainEnglish: 'The deal failed at the last moment.' }, tPassage, 'none');
+    expect(r.ok).toBe(true);
+    if (r.ok) {
+      expect(r.card).not.toHaveProperty('translation');
+      expect(r.card.keyExpressions).toEqual([{ expression: 'fell through', indices: [3, 4], meaning: 'To fail to happen.' }]);
+    }
+  });
+
+  it('keeps only the English summary', () => {
+    expect(validateSummary({ english: 'A summary.', translation: 'ملخص.' }, 'none')).toEqual({
+      ok: true,
+      card: { language: 'none', english: 'A summary.' },
+    });
   });
 });

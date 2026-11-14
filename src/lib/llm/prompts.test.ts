@@ -24,7 +24,7 @@ describe('system prompts', () => {
   it('are long enough to be cached and contain worked examples with empty lists', () => {
     expect(DICTIONARY_SYSTEM.length).toBeGreaterThan(3000);
     expect(DICTIONARY_SYSTEM).toContain('"notes": []');
-    expect(DICTIONARY_SYSTEM).not.toContain('arabicMeaning');
+    expect(DICTIONARY_SYSTEM).not.toContain('translationNote');
     expect(DICTIONARY_SYSTEM).toContain('"ipaUk"');
     expect(DICTIONARY_SYSTEM).toContain('"ipaUs"');
     expect(DICTIONARY_SYSTEM).not.toContain('does not want pronunciation');
@@ -42,7 +42,7 @@ describe('pageContextBlock', () => {
     expect(without).toContain('A title');
     expect(without).toContain('Example');
     expect(without).not.toContain('Summary');
-    const withSummary = pageContextBlock(page, { english: 'The gist.', arabic: 'الخلاصة.' });
+    const withSummary = pageContextBlock(page, { language: 'ar', english: 'The gist.', translation: 'الخلاصة.' });
     expect(withSummary).toContain('The gist.');
   });
 });

@@ -18,9 +18,9 @@ const goodAnswer = {
   partOfSpeech: 'phrasal verb',
   unitIndices: [3, 6],
   meaning: 'To refuse an offer or request.',
-  arabic: 'رفض',
+  translation: 'رفض',
   notes: [],
-  sentenceArabic: 'رفضوا العرض.',
+  sentenceTranslation: 'رفضوا العرض.',
   examples: ['She turned down the job.', 'He turned the invitation down.'],
   combinations: [],
   otherMeanings: [],
@@ -90,7 +90,7 @@ describe('performLookup', () => {
   });
 
   it('gives up after the retry', async () => {
-    const deps = fakeDeps([{ ...goodAnswer, arabic: 'latin' }, { ...goodAnswer, arabic: 'latin' }]);
+    const deps = fakeDeps([{ ...goodAnswer, translation: 'latin' }, { ...goodAnswer, translation: 'latin' }]);
     const res = await performLookup(wordRequest(), deps);
     expect(res.ok).toBe(false);
     if (!res.ok) expect(res.error.code).toBe('invalid_answer');

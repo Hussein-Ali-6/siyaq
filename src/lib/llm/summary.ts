@@ -51,7 +51,8 @@ async function summarize(input: SummaryInput, deps: SummaryDeps): Promise<Summar
       }
       return { ok: false, error: { code: e.code, message: e.message, status: e.status } };
     }
-    const validated = validateSummary(json);
+    // Arabic stays fixed here until the reader's language is passed in (next task).
+    const validated = validateSummary(json, 'ar');
     if (validated.ok) {
       await deps.cache.set(input.url, validated.card);
       log.info('summary_ok', { attempt });

@@ -27,8 +27,8 @@ export function SentenceText({ segments, sentence }: { segments?: Segment[]; sen
 export function ArabicMeaning({ card, className = '' }: { card: DictionaryCard; className?: string }) {
   return (
     <div dir="rtl" lang="ar" className={`arabic ${className}`}>
-      <p className="text-[16px] font-medium">{card.arabic}</p>
-      {card.arabicMeaning && <p className="text-[14px] leading-relaxed">{card.arabicMeaning}</p>}
+      <p className="text-[16px] font-medium">{card.translation}</p>
+      {card.translationNote && <p className="text-[14px] leading-relaxed">{card.translationNote}</p>}
     </div>
   );
 }
@@ -62,7 +62,7 @@ export function DictionaryView({ card, segments, sentence }: { card: DictionaryC
         </p>
         <div className="mt-2 border-t border-border pt-2">
           <BlurReveal>
-            <Arabic className="text-[14px]">{card.sentenceArabic}</Arabic>
+            <Arabic className="text-[14px]">{card.sentenceTranslation}</Arabic>
           </BlurReveal>
         </div>
       </section>
@@ -100,7 +100,7 @@ export function DictionaryView({ card, segments, sentence }: { card: DictionaryC
               <li key={i} className="flex flex-col gap-0.5 border-l-2 border-border pl-2.5">
                 <span>{m.meaning}</span>
                 <Arabic as="span" className="text-[13px] text-muted">
-                  {m.arabic}
+                  {m.translation}
                 </Arabic>
               </li>
             ))}

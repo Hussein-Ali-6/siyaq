@@ -29,7 +29,7 @@ export function TranslationView({
         </div>
       </div>
 
-      <Arabic className="whitespace-pre-wrap text-[15px]">{card.arabic}</Arabic>
+      <Arabic className="whitespace-pre-wrap text-[15px]">{card.translation}</Arabic>
 
       {card.plainEnglish && (
         <section className="space-y-1.5">
@@ -54,7 +54,7 @@ export function TranslationView({
                   <span className="text-muted"> · </span>
                   <span className="text-[13px]">{k.meaning}</span>
                   <Arabic as="span" className="ml-2 inline-block text-[13px] text-muted">
-                    {k.arabic}
+                    {k.translation}
                   </Arabic>
                 </button>
               </li>

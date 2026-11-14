@@ -108,7 +108,7 @@ export function App() {
                       <p className="whitespace-pre-wrap rounded-xl bg-surface-2 p-3 text-[13px] leading-relaxed">
                         <SentenceText segments={item.sentenceSegments} sentence={item.sentence} />
                       </p>
-                      <Arabic className="text-[13px] text-muted">{item.card.sentenceArabic}</Arabic>
+                      <Arabic className="text-[13px] text-muted">{item.card.sentenceTranslation}</Arabic>
                     </>
                   ) : (
                     <>
@@ -117,7 +117,7 @@ export function App() {
                         <SpeakButton text={item.selection} accent="uk" label="UK" />
                         <SpeakButton text={item.selection} accent="us" label="US" />
                       </div>
-                      <Arabic className="whitespace-pre-wrap text-[14px]">{item.card.arabic}</Arabic>
+                      <Arabic className="whitespace-pre-wrap text-[14px]">{item.card.translation}</Arabic>
                     </>
                   )}
                   <p className="flex flex-wrap items-center gap-x-3 text-[12px] text-faint">

@@ -5,32 +5,34 @@ import type { DictionaryCard, TranslationCard } from '@/lib/types';
 
 const dictionary: DictionaryCard = {
   kind: 'word',
+  language: 'ar',
   headword: 'turn down',
   partOfSpeech: 'phrasal verb',
   ipaUk: 'ˌtɜːn ˈdaʊn',
   ipaUs: 'ˌtɝːn ˈdaʊn',
   unitIndices: [11, 14],
   meaning: 'to refuse an offer, request or proposal',
-  arabic: 'رفض',
+  translation: 'رفض',
   notes: ['Informal in speech; "decline" is the formal equivalent.'],
-  sentenceArabic: 'بعد نقاش قصير، رفض المجلس العرض.',
+  sentenceTranslation: 'بعد نقاش قصير، رفض المجلس العرض.',
   examples: ['She turned down the job because the salary was too low.', 'They turned our request down without any explanation.'],
   combinations: ['turn down an offer', 'turn down a request', 'flatly turn down'],
   otherMeanings: [
-    { meaning: 'to reduce the sound, heat or power of a machine', arabic: 'خفّض' },
-    { meaning: 'to fold part of something downwards', arabic: 'طوى / ثنى' },
+    { meaning: 'to reduce the sound, heat or power of a machine', translation: 'خفّض' },
+    { meaning: 'to fold part of something downwards', translation: 'طوى / ثنى' },
   ],
 };
 
 const translation: TranslationCard = {
   kind: 'sentence',
-  arabic:
+  language: 'ar',
+  translation:
     'انهارت الصفقة في اللحظة الأخيرة، وخرج المستثمرون منها بلا شيء. وبصرف النظر عمّا سبق، يلتزم المرخَّص له بتعويض المرخِّص عن أي مطالبات من الغير تنشأ عن استخدامه للبرنامج.',
   plainEnglish:
     'The deal failed right before it was final, so the investors got nothing. Even so, whoever uses the software must cover the owner’s costs if someone else makes a claim because of that use.',
   keyExpressions: [
-    { expression: 'fell through', indices: [3, 4], meaning: 'failed to happen after being planned', arabic: 'فشلت' },
-    { expression: 'indemnify', indices: [22], meaning: 'to promise to pay for any loss or damage someone suffers', arabic: 'عوّض' },
+    { expression: 'fell through', indices: [3, 4], meaning: 'failed to happen after being planned', translation: 'فشلت' },
+    { expression: 'indemnify', indices: [22], meaning: 'to promise to pay for any loss or damage someone suffers', translation: 'عوّض' },
   ],
 };
 
@@ -67,9 +69,10 @@ const ready = (extra: Partial<CardEntry> = {}) =>
   entry({ kind: 'word', status: 'ready', card: dictionary, id: 'x', sentence: sentenceText, sentenceSegments: segments, ...extra });
 
 const summaryText = {
+  language: 'ar',
   english:
     'The article tells the story of a startup whose board rejected a buyout offer after a short debate. The founders had spent their funding quickly and leaked their plans, so the rejection surprised nobody. A later deal also collapsed at the last minute, leaving investors with nothing.',
-  arabic:
+  translation:
     'يروي المقال قصة شركة ناشئة رفض مجلس إدارتها عرض استحواذ بعد نقاش قصير. كان المؤسسون قد أنفقوا تمويلهم بسرعة وسرّبوا خططهم، فلم يفاجئ الرفض أحدًا. كما انهارت صفقة لاحقة في اللحظة الأخيرة، فخرج المستثمرون بلا شيء.',
 };
 

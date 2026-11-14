@@ -1,6 +1,7 @@
 import { z } from 'zod';
+import { NO_TRANSLATION, hasScript, resolveLanguage, type ResolvedLanguage } from '@/lib/languages';
 import { validateIndices } from '@/lib/text/tokens';
-import type { DictionaryCard, KeyExpression, Passage, Summary, TranslationCard } from '@/lib/types';
+import type { DictionaryCard, KeyExpression, OtherMeaning, Passage, Summary, TranslationCard } from '@/lib/types';
 
 export const LIMITS = {
   examples: 2,
@@ -9,11 +10,8 @@ export const LIMITS = {
   keyExpressions: 3,
 } as const;
 
-const ARABIC = /\p{Script=Arabic}/u;
-
 const trimmed = z.string().transform((s) => s.trim());
 const nonEmpty = trimmed.pipe(z.string().min(1));
-const arabic = nonEmpty.refine((s) => ARABIC.test(s), { message: 'must contain Arabic script' });
 const optionalString = trimmed.catch('');
 /** IPA without surrounding slashes or brackets; anything missing or implausibly long becomes empty. */
 const ipa = z.unknown().optional().transform((v) => {
@@ -34,45 +32,29 @@ const stringList = (max = Infinity) =>
         .slice(0, max),
     );
 
-const otherMeaningSchema = z.object({ meaning: nonEmpty, arabic });
+const unknownList = z.array(z.unknown()).catch([]);
 
-const dictionarySchema = z.object({
+// The English parts of each answer. Translation fields are checked separately, by language.
+const dictionaryFields = z.object({
   headword: nonEmpty,
   partOfSpeech: optionalString,
   ipaUk: ipa,
   ipaUs: ipa,
   unitIndices: z.unknown(),
   meaning: nonEmpty,
-  arabic,
   // No cap on notes: the model decides how many are useful.
   notes: stringList(),
-  sentenceArabic: arabic,
   examples: stringList(LIMITS.examples).refine((a) => a.length >= 1, { message: 'at least one example is required' }),
   combinations: stringList(LIMITS.combinations),
-  otherMeanings: z
-    .array(z.unknown())
-    .catch([])
-    .transform((items) =>
-      items
-        .flatMap((x) => {
-          const r = otherMeaningSchema.safeParse(x);
-          return r.success ? [r.data] : [];
-        })
-        .slice(0, LIMITS.otherMeanings),
-    ),
+  otherMeanings: unknownList,
 });
-
-const keyExpressionSchema = z.object({ expression: nonEmpty, indices: z.unknown(), meaning: nonEmpty, arabic });
-
-const translationSchema = z.object({
-  arabic,
-  plainEnglish: optionalString,
-  keyExpressions: z.array(z.unknown()).catch([]),
-});
-
-const summarySchema = z.object({ english: nonEmpty, arabic });
+const otherMeaningFields = z.object({ meaning: nonEmpty });
+const keyExpressionFields = z.object({ expression: nonEmpty, indices: z.unknown(), meaning: nonEmpty });
+const translationFields = z.object({ plainEnglish: optionalString, keyExpressions: unknownList });
+const summaryFields = z.object({ english: nonEmpty });
 
 export type Validation<T> = { ok: true; card: T } | { ok: false; reason: string };
+type Text = { ok: true; text: string } | { ok: false; reason: string };
 
 function reasonOf(error: z.ZodError): string {
   return error.issues
@@ -81,35 +63,85 @@ function reasonOf(error: z.ZodError): string {
     .join('; ');
 }
 
-export function validateDictionary(raw: unknown, passage: Passage, selected: number[]): Validation<DictionaryCard> {
-  const parsed = dictionarySchema.safeParse(raw);
+/** The language whose rules the translation fields follow. Null for English only, which has none. */
+function translationLanguage(language: string): ResolvedLanguage | null {
+  return language === NO_TRANSLATION ? null : resolveLanguage(language);
+}
+
+/**
+ * One translation field: not empty, and when the language has its own script, containing at least
+ * one character of it, which catches an answer left in English.
+ */
+function translationText(raw: unknown, field: string, lang: ResolvedLanguage): Text {
+  const value = (raw as Record<string, unknown> | null)?.[field];
+  const text = typeof value === 'string' ? value.trim() : '';
+  if (!text) return { ok: false, reason: `${field}: is required, in ${lang.promptName}` };
+  if (lang.script && !hasScript(text, lang.script)) return { ok: false, reason: `${field}: must be written in ${lang.promptName}` };
+  return { ok: true, text };
+}
+
+/** Other meanings whose English and translation are both usable; the rest are dropped. */
+function otherMeanings(items: unknown[], lang: ResolvedLanguage | null): OtherMeaning[] {
+  return items
+    .flatMap((x): OtherMeaning[] => {
+      const r = otherMeaningFields.safeParse(x);
+      if (!r.success) return [];
+      if (!lang) return [{ meaning: r.data.meaning }];
+      const t = translationText(x, 'translation', lang);
+      return t.ok ? [{ meaning: r.data.meaning, translation: t.text }] : [];
+    })
+    .slice(0, LIMITS.otherMeanings);
+}
+
+export function validateDictionary(raw: unknown, passage: Passage, selected: number[], language: string): Validation<DictionaryCard> {
+  const parsed = dictionaryFields.safeParse(raw);
   if (!parsed.success) return { ok: false, reason: reasonOf(parsed.error) };
   const indices = validateIndices(parsed.data.unitIndices, passage, selected);
   if (!indices.ok) return { ok: false, reason: `unitIndices: ${indices.reason}` };
-  const { unitIndices: _ignored, ...rest } = parsed.data;
-  return { ok: true, card: { kind: 'word', ...rest, unitIndices: indices.indices } };
+  const { unitIndices: _ignored, otherMeanings: others, ...rest } = parsed.data;
+  const lang = translationLanguage(language);
+  const card = { kind: 'word' as const, language, ...rest, unitIndices: indices.indices, otherMeanings: otherMeanings(others, lang) };
+  if (!lang) return { ok: true, card };
+  const translation = translationText(raw, 'translation', lang);
+  if (!translation.ok) return translation;
+  const sentence = translationText(raw, 'sentenceTranslation', lang);
+  if (!sentence.ok) return sentence;
+  return { ok: true, card: { ...card, translation: translation.text, sentenceTranslation: sentence.text } };
 }
 
-export function validateTranslation(raw: unknown, passage: Passage): Validation<TranslationCard> {
-  const parsed = translationSchema.safeParse(raw);
+export function validateTranslation(raw: unknown, passage: Passage, language: string): Validation<TranslationCard> {
+  const parsed = translationFields.safeParse(raw);
   if (!parsed.success) return { ok: false, reason: reasonOf(parsed.error) };
-  const keyExpressions: KeyExpression[] = parsed.data.keyExpressions
+  const lang = translationLanguage(language);
+  const keyExpressions = parsed.data.keyExpressions
     .flatMap((x): KeyExpression[] => {
-      const r = keyExpressionSchema.safeParse(x);
+      const r = keyExpressionFields.safeParse(x);
       if (!r.success) return [];
       const idx = validateIndices(r.data.indices, passage, []);
       if (!idx.ok) return [];
-      return [{ expression: r.data.expression, indices: idx.indices, meaning: r.data.meaning, arabic: r.data.arabic }];
+      const expression = { expression: r.data.expression, indices: idx.indices, meaning: r.data.meaning };
+      if (!lang) return [expression];
+      const t = translationText(x, 'translation', lang);
+      return t.ok ? [{ ...expression, translation: t.text }] : [];
     })
     .slice(0, LIMITS.keyExpressions);
-  return {
-    ok: true,
-    card: { kind: 'sentence', arabic: parsed.data.arabic, plainEnglish: parsed.data.plainEnglish, keyExpressions },
-  };
+  const { plainEnglish } = parsed.data;
+  if (!lang) {
+    // With no translation, the plainer English is the explanation, so it is required.
+    if (!plainEnglish) return { ok: false, reason: 'plainEnglish: is required' };
+    return { ok: true, card: { kind: 'sentence', language, plainEnglish, keyExpressions } };
+  }
+  const translation = translationText(raw, 'translation', lang);
+  if (!translation.ok) return translation;
+  return { ok: true, card: { kind: 'sentence', language, translation: translation.text, plainEnglish, keyExpressions } };
 }
 
-export function validateSummary(raw: unknown): Validation<Summary> {
-  const parsed = summarySchema.safeParse(raw);
+export function validateSummary(raw: unknown, language: string): Validation<Summary> {
+  const parsed = summaryFields.safeParse(raw);
   if (!parsed.success) return { ok: false, reason: reasonOf(parsed.error) };
-  return { ok: true, card: parsed.data };
+  const lang = translationLanguage(language);
+  if (!lang) return { ok: true, card: { language, english: parsed.data.english } };
+  const translation = translationText(raw, 'translation', lang);
+  if (!translation.ok) return translation;
+  return { ok: true, card: { language, english: parsed.data.english, translation: translation.text } };
 }

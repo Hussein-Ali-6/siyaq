@@ -7,7 +7,7 @@ export function SummaryView({ summary }: { summary: SummaryState }) {
     return (
       <div className="space-y-4">
         <p className="whitespace-pre-wrap text-[14px] leading-relaxed">{summary.summary.english}</p>
-        <Arabic className="whitespace-pre-wrap border-t border-border pt-3">{summary.summary.arabic}</Arabic>
+        <Arabic className="whitespace-pre-wrap border-t border-border pt-3">{summary.summary.translation}</Arabic>
       </div>
     );
   }

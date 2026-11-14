@@ -1,12 +1,14 @@
 import { browser } from 'wxt/browser';
 import type { DictionaryCard, SavedItem } from '@/lib/types';
+import { migrateSavedItem } from '@/lib/storage/migrate';
 
 const KEY = 'saved';
 
 async function readAll(): Promise<SavedItem[]> {
   const result = await browser.storage.local.get(KEY);
   const value = result[KEY];
-  return Array.isArray(value) ? (value as SavedItem[]) : [];
+  // Items saved before translations had a language are converted on the way in.
+  return Array.isArray(value) ? (value as SavedItem[]).map(migrateSavedItem) : [];
 }
 
 /** Newest first. */
@@ -41,17 +43,17 @@ export function foldText(text: string): string {
 }
 
 function searchableText(item: SavedItem): string {
-  const parts = [item.selection, item.sentence, item.pageTitle];
+  const parts: Array<string | undefined> = [item.selection, item.sentence, item.pageTitle];
   if (item.card.kind === 'word') {
     const c = item.card;
-    parts.push(c.headword, c.meaning, c.arabic, c.arabicMeaning ?? '', c.sentenceArabic, ...c.notes, ...c.combinations);
-    parts.push(...c.otherMeanings.flatMap((m) => [m.meaning, m.arabic]));
+    parts.push(c.headword, c.meaning, c.translation, c.translationNote, c.sentenceTranslation, ...c.notes, ...c.combinations);
+    parts.push(...c.otherMeanings.flatMap((m) => [m.meaning, m.translation]));
   } else {
     const c = item.card;
-    parts.push(c.arabic, c.plainEnglish);
-    parts.push(...c.keyExpressions.flatMap((k) => [k.expression, k.meaning, k.arabic]));
+    parts.push(c.translation, c.plainEnglish);
+    parts.push(...c.keyExpressions.flatMap((k) => [k.expression, k.meaning, k.translation]));
   }
-  return foldText(parts.join('\n'));
+  return foldText(parts.filter(Boolean).join('\n'));
 }
 
 export function searchSaved(items: SavedItem[], query: string): SavedItem[] {
@@ -64,9 +66,9 @@ export function toJson(items: SavedItem[]): string {
   return JSON.stringify(items, null, 2);
 }
 
-/** The card's Arabic, plus the separate explanation that a few older saved cards carry. */
-function arabicText(card: DictionaryCard): string {
-  return [card.arabic, card.arabicMeaning].filter(Boolean).join(' — ');
+/** The card's translation, plus the separate explanation that a few older saved cards carry. */
+function translationText(card: DictionaryCard): string {
+  return [card.translation, card.translationNote].filter(Boolean).join(' — ');
 }
 
 function csvCell(value: string): string {
@@ -80,8 +82,8 @@ export function toCsv(items: SavedItem[]): string {
     const saved = new Date(item.savedAt).toISOString().slice(0, 10);
     const cells =
       item.card.kind === 'word'
-        ? ['word', item.card.headword, item.card.ipaUk ?? '', item.card.ipaUs ?? '', arabicText(item.card), item.card.meaning, item.sentence, item.card.sentenceArabic]
-        : ['sentence', '', '', '', '', item.card.plainEnglish, item.selection, item.card.arabic];
+        ? ['word', item.card.headword, item.card.ipaUk ?? '', item.card.ipaUs ?? '', translationText(item.card), item.card.meaning, item.sentence, item.card.sentenceTranslation ?? '']
+        : ['sentence', '', '', '', '', item.card.plainEnglish, item.selection, item.card.translation ?? ''];
     return [...cells, item.pageTitle, item.url, saved].map(csvCell).join(',');
   });
   return [CSV_HEADER.join(','), ...rows].join('\n');

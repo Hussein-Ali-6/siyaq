@@ -101,9 +101,10 @@ export async function performLookup(req: LookupRequest, deps: LookupDeps): Promi
       return { ok: false, error: { code: e.code, message: e.message, status: e.status } };
     }
 
+    // Arabic stays fixed here until the reader's language is passed in (next task).
     const validated = isWord
-      ? validateDictionary(json, req.passage, req.selectedIndices)
-      : validateTranslation(json, req.passage);
+      ? validateDictionary(json, req.passage, req.selectedIndices, 'ar')
+      : validateTranslation(json, req.passage, 'ar');
     if (validated.ok) {
       log.info('lookup_ok', { kind: req.kind, attempt, ms: Date.now() - started });
       await deps.cache.set(key, validated.card);

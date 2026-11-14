@@ -43,11 +43,14 @@ export interface LookupRequest {
 
 export interface OtherMeaning {
   meaning: string;
-  arabic: string;
+  /** Absent on English-only cards. */
+  translation?: string;
 }
 
 export interface DictionaryCard {
   kind: 'word';
+  /** Language id of the translations (`@/lib/languages`); "none" when the card is English only. */
+  language: string;
   headword: string;
   partOfSpeech: string;
   /** British and American IPA without slashes; empty when unknown, missing on cards saved before 2026-10-18. */
@@ -56,12 +59,13 @@ export interface DictionaryCard {
   /** Indices of the unit's words in the passage, verified against the request. */
   unitIndices: number[];
   meaning: string;
-  /** The Arabic for this sense, with a short clarification when a single word would mislead. */
-  arabic: string;
+  /** This sense in the reader's language, with a short clarification when a single word would mislead. */
+  translation?: string;
   /** Only on cards saved while the explanation was a separate field; shown and searched for those. */
-  arabicMeaning?: string;
+  translationNote?: string;
   notes: string[];
-  sentenceArabic: string;
+  /** The sentence in the reader's language. */
+  sentenceTranslation?: string;
   examples: string[];
   combinations: string[];
   otherMeanings: OtherMeaning[];
@@ -71,13 +75,17 @@ export interface KeyExpression {
   expression: string;
   indices: number[];
   meaning: string;
-  arabic: string;
+  /** Absent on English-only cards. */
+  translation?: string;
 }
 
 export interface TranslationCard {
   kind: 'sentence';
-  arabic: string;
-  /** Empty when the original is easy to follow. */
+  /** Language id of the translations (`@/lib/languages`); "none" when the card is English only. */
+  language: string;
+  /** The selection in the reader's language. Absent on English-only cards. */
+  translation?: string;
+  /** Empty when the original is easy to follow. Always given on English-only cards. */
   plainEnglish: string;
   keyExpressions: KeyExpression[];
 }
@@ -85,8 +93,10 @@ export interface TranslationCard {
 export type Card = DictionaryCard | TranslationCard;
 
 export interface Summary {
+  /** Language id of the translation (`@/lib/languages`); "none" when the summary is English only. */
+  language: string;
   english: string;
-  arabic: string;
+  translation?: string;
 }
 
 /** A run of sentence text; `bold` marks the looked-up unit. */

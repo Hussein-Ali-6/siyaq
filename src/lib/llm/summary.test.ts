@@ -27,7 +27,7 @@ function fakeDeps(answers: unknown[], delayMs = 0): SummaryDeps & { calls: numbe
 }
 
 const input = { url: 'https://example.com/a', title: 'T', siteName: 'S', text: 'Article body text.' };
-const good = { english: 'A short summary.', arabic: 'ملخص قصير.' };
+const good = { english: 'A short summary.', translation: 'ملخص قصير.' };
 
 describe('performSummary', () => {
   it('summarises, validates and caches', async () => {
@@ -49,7 +49,7 @@ describe('performSummary', () => {
   });
 
   it('retries once on an unusable answer', async () => {
-    const deps = fakeDeps([{ english: 'x', arabic: 'not arabic' }, good]);
+    const deps = fakeDeps([{ english: 'x', translation: 'not arabic' }, good]);
     const res = await performSummary({ ...input, url: 'https://example.com/b' }, deps);
     expect(res.ok).toBe(true);
     expect(deps.calls).toBe(2);

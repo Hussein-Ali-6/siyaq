@@ -11,16 +11,17 @@ function wordItem(id: string, headword: string, arabic: string): Omit<SavedItem,
     kind: 'word',
     card: {
       kind: 'word',
+      language: 'ar',
       headword,
       partOfSpeech: 'verb',
       ipaUk: 'tɛst',
       ipaUs: 'test',
       unitIndices: [1],
       meaning: `to ${headword} something`,
-      arabic,
-      arabicMeaning: `شرح ${arabic}`,
+      translation: arabic,
+      translationNote: `شرح ${arabic}`,
       notes: [],
-      sentenceArabic: 'جملة',
+      sentenceTranslation: 'جملة',
       examples: ['a', 'b'],
       combinations: [],
       otherMeanings: [],
@@ -59,7 +60,7 @@ describe('searchSaved', () => {
     {
       id: 'c',
       kind: 'sentence',
-      card: { kind: 'sentence', arabic: 'ذهب أحمد إلى السوق.', plainEnglish: '', keyExpressions: [] },
+      card: { kind: 'sentence', language: 'ar', translation: 'ذهب أحمد إلى السوق.', plainEnglish: '', keyExpressions: [] },
       selection: 'Ahmed went to the market.',
       sentence: 'Ahmed went to the market.',
       sentenceSegments: [{ text: 'Ahmed went to the market.' }],
@@ -101,5 +102,25 @@ describe('export', () => {
     expect(lines[1]).toContain('"say ""hi"""');
     expect(lines[1]).toContain('2026-10-16');
     expect(JSON.parse(toJson(items))).toHaveLength(1);
+  });
+});
+
+describe('items saved before translations had a language', () => {
+  it('are converted when read', async () => {
+    const old = {
+      id: 'old',
+      kind: 'sentence',
+      card: { kind: 'sentence', arabic: 'مرحبا', plainEnglish: '', keyExpressions: [] },
+      selection: 'Hello',
+      sentence: 'Hello',
+      sentenceSegments: [{ text: 'Hello' }],
+      pageTitle: 'P',
+      url: 'https://example.com/o',
+      savedAt: 1,
+    };
+    await fakeBrowser.storage.local.set({ saved: [old] });
+    const [item] = await listSaved();
+    expect(item?.card).toEqual({ kind: 'sentence', language: 'ar', translation: 'مرحبا', plainEnglish: '', keyExpressions: [] });
+    expect(await isSaved('old')).toBe(true);
   });
 });

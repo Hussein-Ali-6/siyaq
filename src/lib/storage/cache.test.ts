@@ -11,7 +11,7 @@ import {
 } from '@/lib/storage/cache';
 import type { Card } from '@/lib/types';
 
-const card: Card = { kind: 'sentence', arabic: 'مرحبا', plainEnglish: '', keyExpressions: [] };
+const card: Card = { kind: 'sentence', language: 'ar', translation: 'مرحبا', plainEnglish: '', keyExpressions: [] };
 
 beforeEach(() => fakeBrowser.reset());
 
@@ -25,7 +25,7 @@ describe('card cache', () => {
 
 describe('summary cache', () => {
   it('is keyed by the normalised URL', async () => {
-    const summary = { english: 'Gist.', arabic: 'الخلاصة.' };
+    const summary = { language: 'ar', english: 'Gist.', translation: 'الخلاصة.' };
     await setCachedSummary('https://example.com/a?utm_source=x#top', summary);
     expect(await getCachedSummary('https://example.com/a')).toEqual(summary);
     expect(await getCachedSummary('https://example.com/b')).toBeNull();
@@ -46,7 +46,7 @@ describe('trim and clear', () => {
 
   it('counts and clears both caches without touching other keys', async () => {
     await setCachedCard('k1', card);
-    await setCachedSummary('https://example.com/a', { english: 'e', arabic: 'ع' });
+    await setCachedSummary('https://example.com/a', { language: 'ar', english: 'e', translation: 'ع' });
     await fakeBrowser.storage.local.set({ apiKey: 'keep-me' });
     expect(await cacheStats()).toEqual({ cards: 1, summaries: 1 });
     expect(await clearCaches()).toBe(2);

@@ -88,7 +88,7 @@ export function App() {
             {summary.status === 'ready' && summary.summary ? (
               <div className="max-h-[360px] space-y-3 overflow-y-auto rounded-xl border border-border bg-surface p-3">
                 <p className="whitespace-pre-wrap text-[13px] leading-relaxed">{summary.summary.english}</p>
-                <Arabic className="whitespace-pre-wrap border-t border-border pt-2 text-[13px]">{summary.summary.arabic}</Arabic>
+                <Arabic className="whitespace-pre-wrap border-t border-border pt-2 text-[13px]">{summary.summary.translation}</Arabic>
               </div>
             ) : summary.status === 'loading' ? (
               <div className="rounded-xl border border-border bg-surface p-3">
