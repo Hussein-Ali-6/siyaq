@@ -9,11 +9,15 @@
  *        only works inside the extension.
  *   pnpm eval --only pg  limits to articles whose id contains "pg"
  *   pnpm eval --live --pick crackdown,outlier --no-summary   only those selections, no summaries
+ *   pnpm eval --live --language es --level B2   reader settings: a language id from src/lib/languages.ts
+ *        ("none" for English only, "x:Kurdish" for a typed language) and B1, B2 or C1.
+ *        Defaults: ar and C1. The report goes to scripts/eval/out/report-<language>-<level>.md.
  *
  * Pages are fetched once and cached under scripts/eval/.cache/.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
+import { NO_TRANSLATION, languageName } from '@/lib/languages';
 import { createAiSdkClient } from '@/lib/llm/aisdk';
 import { DEFAULT_ANTHROPIC_MODEL, createAnthropicClient } from '@/lib/llm/anthropic';
 import type { LlmClient, Thinking } from '@/lib/llm/types';
@@ -25,7 +29,7 @@ import { buildFlatModel, spanToRange } from '@/lib/dom/flat';
 import { buildLookupRequest, readSelection } from '@/lib/dom/selection';
 import { buildNumberedPassage } from '@/lib/text/tokens';
 import { countWords } from '@/lib/text/words';
-import type { Card, LookupRequest, Summary } from '@/lib/types';
+import type { Card, Level, LookupRequest, Summary } from '@/lib/types';
 
 interface Expect {
   unit?: string;
@@ -59,7 +63,13 @@ const flagValue = (name: string) => (args.includes(name) ? args[args.indexOf(nam
 const only = flagValue('--only');
 const pick = flagValue('--pick')?.split(',').map((p) => p.trim().toLowerCase()).filter(Boolean);
 const withSummary = !args.includes('--no-summary');
-const reader: Reader = { language: 'ar', level: 'C1' };
+const level = (flagValue('--level') ?? 'C1') as Level;
+if (!['B1', 'B2', 'C1'].includes(level)) {
+  console.error(`Unknown level "${level}". Use B1, B2 or C1.`);
+  process.exit(1);
+}
+const reader: Reader = { language: flagValue('--language') ?? 'ar', level };
+const readerLabel = `${languageName(reader.language)}, ${reader.level}`;
 const picked = (sel: Selection) => !pick || pick.some((p) => sel.text.toLowerCase().startsWith(p));
 const cacheDir = new URL('.cache/', here);
 const outDir = new URL('out/', here);
@@ -144,6 +154,7 @@ function flags(sel: Selection, card: Card): string[] {
     for (const avoid of e.avoidKeyExpr ?? []) {
       if (card.keyExpressions.some((k) => k.expression.toLowerCase().includes(avoid))) out.push(`padded key expression: ${avoid}`);
     }
+    if (reader.language === NO_TRANSLATION && !card.plainEnglish) out.push('English only without plain English');
   }
   return out;
 }
@@ -154,18 +165,18 @@ function cardMarkdown(card: Card): string {
       `**${card.headword}** · ${card.partOfSpeech} · unit ${JSON.stringify(card.unitIndices)}`,
       `- ipa: UK /${card.ipaUk ?? ''}/ · US /${card.ipaUs ?? ''}/`,
       `- meaning: ${card.meaning}`,
-      `- translation: ${card.translation}`,
+      `- translation: ${card.translation ?? '(none)'}`,
       `- notes: ${card.notes.length ? card.notes.join(' | ') : '(none)'}`,
-      `- sentence (ar): ${card.sentenceTranslation}`,
+      `- sentence translation: ${card.sentenceTranslation ?? '(none)'}`,
       `- examples: ${card.examples.join(' | ')}`,
       `- combinations: ${card.combinations.length ? card.combinations.join(', ') : '(none)'}`,
-      `- other meanings: ${card.otherMeanings.length ? card.otherMeanings.map((m) => `${m.meaning} (${m.translation})`).join(' | ') : '(none)'}`,
+      `- other meanings: ${card.otherMeanings.length ? card.otherMeanings.map((m) => (m.translation ? `${m.meaning} (${m.translation})` : m.meaning)).join(' | ') : '(none)'}`,
     ].join('\n');
   }
   return [
-    `- translation: ${card.translation}`,
+    `- translation: ${card.translation ?? '(none)'}`,
     `- plain English: ${card.plainEnglish || '(none)'}`,
-    `- key expressions: ${card.keyExpressions.length ? card.keyExpressions.map((k) => `${k.expression} ${JSON.stringify(k.indices)}: ${k.meaning} (${k.translation})`).join(' | ') : '(none)'}`,
+    `- key expressions: ${card.keyExpressions.length ? card.keyExpressions.map((k) => `${k.expression} ${JSON.stringify(k.indices)}: ${k.meaning}${k.translation ? ` (${k.translation})` : ''}`).join(' | ') : '(none)'}`,
   ].join('\n');
 }
 
@@ -196,7 +207,8 @@ async function main() {
       : createAiSdkClient(provider as 'openai' | 'google' | 'openrouter', { apiKey, model, thinking });
     console.log(`Provider ${provider}, model ${model}, thinking ${thinking}`);
   }
-  const report: string[] = [`# Siyaq evaluation ${new Date().toISOString().slice(0, 10)}${live ? '' : ' (dry run)'}`, ''];
+  console.log(`Reader: ${readerLabel}`);
+  const report: string[] = [`# Siyaq evaluation ${new Date().toISOString().slice(0, 10)} · ${readerLabel}${live ? '' : ' (dry run)'}`, ''];
   let total = 0;
   let flagged = 0;
 
@@ -274,7 +286,8 @@ async function main() {
     }
   }
   report.unshift(`Cases: ${total}, flagged: ${flagged}`, '');
-  const file = new URL('report.md', outDir);
+  const slug = reader.language.replace(/[^a-z0-9-]+/gi, '-').toLowerCase();
+  const file = new URL(`report-${slug}-${reader.level}.md`, outDir);
   writeFileSync(file, report.join('\n'));
   console.log(`\n${total} cases, ${flagged} flagged. Report: ${file.pathname}`);
 }
