@@ -24,11 +24,13 @@ describe('card cache', () => {
 });
 
 describe('summary cache', () => {
-  it('is keyed by the normalised URL', async () => {
+  it('is keyed by the normalised URL and the language', async () => {
     const summary = { language: 'ar', english: 'Gist.', translation: 'الخلاصة.' };
-    await setCachedSummary('https://example.com/a?utm_source=x#top', summary);
-    expect(await getCachedSummary('https://example.com/a')).toEqual(summary);
-    expect(await getCachedSummary('https://example.com/b')).toBeNull();
+    await setCachedSummary('https://example.com/a?utm_source=x#top', 'ar', summary);
+    expect(await getCachedSummary('https://example.com/a', 'ar')).toEqual(summary);
+    expect(await getCachedSummary('https://example.com/a', 'AR')).toEqual(summary);
+    expect(await getCachedSummary('https://example.com/a', 'es')).toBeNull();
+    expect(await getCachedSummary('https://example.com/b', 'ar')).toBeNull();
   });
 });
 
@@ -46,7 +48,7 @@ describe('trim and clear', () => {
 
   it('counts and clears both caches without touching other keys', async () => {
     await setCachedCard('k1', card);
-    await setCachedSummary('https://example.com/a', { language: 'ar', english: 'e', translation: 'ع' });
+    await setCachedSummary('https://example.com/a', 'ar', { language: 'ar', english: 'e', translation: 'ع' });
     await fakeBrowser.storage.local.set({ apiKey: 'keep-me' });
     expect(await cacheStats()).toEqual({ cards: 1, summaries: 1 });
     expect(await clearCaches()).toBe(2);

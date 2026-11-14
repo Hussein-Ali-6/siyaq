@@ -17,6 +17,7 @@ import {
   setCachedSummary,
   trimCaches,
 } from '@/lib/storage/cache';
+import { prepareStorage } from '@/lib/storage/migrate';
 import { isSaved, removeSaved, saveItem } from '@/lib/storage/saved';
 import { getPrefs, getProviderSettings } from '@/lib/storage/settings';
 import type { Card } from '@/lib/types';
@@ -31,28 +32,35 @@ export default defineBackground(() => {
     },
   };
   const summaryCache = { get: getCachedSummary, set: setCachedSummary };
-  // Arabic and Advanced until the next task reads the reader's settings.
-  const reader: Reader = { language: 'ar', level: 'C1' };
+  const currentReader = async (): Promise<Reader> => {
+    const { language, level } = await getPrefs();
+    return { language, level };
+  };
 
   browser.runtime.onInstalled.addListener(({ reason }) => {
     // Chrome 130+: keep local storage (where keys and tokens live) out of reach of content scripts.
     const local = browser.storage.local as unknown as { setAccessLevel?: (o: { accessLevel: string }) => Promise<void> };
     local.setAccessLevel?.({ accessLevel: 'TRUSTED_CONTEXTS' }).catch(() => undefined);
-    if (reason === 'install') void browser.runtime.openOptionsPage();
+    // The settings are stored before the options page opens, so it shows the starting language at once.
+    void prepareStorage(reason, browser.i18n.getUILanguage())
+      .catch(() => log.warn('prepare_storage_failed'))
+      .finally(() => {
+        if (reason === 'install') void browser.runtime.openOptionsPage();
+      });
   });
 
   onMessage('lookup', async ({ data }) => {
     const r = await resolveActiveClient();
     if ('error' in r) return { ok: false, error: r.error };
-    return performLookup(data, { client: r.client, modelId: r.modelId, reader, cache: cardCache, getSummary: getCachedSummary });
+    return performLookup(data, { client: r.client, modelId: r.modelId, reader: await currentReader(), cache: cardCache, getSummary: getCachedSummary });
   });
 
-  onMessage('getSummary', ({ data }) => getCachedSummary(data));
+  onMessage('getSummary', async ({ data }) => getCachedSummary(data, (await getPrefs()).language));
 
   onMessage('summarize', async ({ data }) => {
     const r = await resolveActiveClient();
     if ('error' in r) return { ok: false, error: r.error };
-    return performSummary(data, { client: r.client, cache: summaryCache, language: reader.language });
+    return performSummary(data, { client: r.client, cache: summaryCache, language: (await getPrefs()).language });
   });
 
   onMessage('saveItem', ({ data }) => saveItem(data));

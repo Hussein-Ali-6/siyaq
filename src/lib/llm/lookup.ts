@@ -25,7 +25,7 @@ export interface CardCache {
 export interface LookupDeps {
   client: LlmClient;
   cache: CardCache;
-  getSummary(url: string): Promise<Summary | null>;
+  getSummary(url: string, language: string): Promise<Summary | null>;
   signal?: AbortSignal;
   /** Pause before retrying a transient API error. Tests pass 0. */
   retryDelayMs?: number;
@@ -37,11 +37,13 @@ export interface LookupDeps {
 
 const DEFAULT_RETRY_DELAY_MS = 700;
 
-/** Cache key: prompt version + provider and model + kind + page + paragraph + selection + which occurrence. */
-export async function cacheKeyFor(req: LookupRequest, modelId: string): Promise<string> {
+/** Cache key: prompt version + provider and model + reader + kind + page + paragraph + selection + which occurrence. */
+export async function cacheKeyFor(req: LookupRequest, modelId: string, reader: Reader): Promise<string> {
   const material = [
     `v${PROMPT_VERSION}`,
     modelId,
+    reader.language.toLowerCase(),
+    reader.level,
     req.kind,
     normalizeUrl(req.page.url),
     req.paragraph,
@@ -68,17 +70,17 @@ export async function performLookup(req: LookupRequest, deps: LookupDeps): Promi
     };
   }
 
-  const key = await cacheKeyFor(req, deps.modelId);
+  const { reader } = deps;
+  const key = await cacheKeyFor(req, deps.modelId, reader);
   const cached = await deps.cache.get(key);
   if (cached) {
     log.info('lookup_cached', { kind: req.kind });
     return { ok: true, card: cached, cached: true, id: key, model: deps.modelId };
   }
 
-  const summary = await deps.getSummary(req.page.url);
+  const summary = await deps.getSummary(req.page.url, reader.language);
   const context = pageContextBlock(req.page, summary);
   const isWord = req.kind === 'word';
-  const { reader } = deps;
   const system = isWord ? dictionarySystem(reader) : translationSystem(reader);
   const schema = isWord ? dictionarySchema(reader.language) : translationSchema(reader.language);
   const maxTokens = maxTokensFor(req);

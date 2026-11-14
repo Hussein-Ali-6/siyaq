@@ -16,9 +16,9 @@ function fakeDeps(answers: unknown[], delayMs = 0, language = 'ar'): SummaryDeps
       async ping() {},
     },
     cache: {
-      get: async (url: string) => store.get(url) ?? null,
-      set: async (url: string, s: Summary) => {
-        store.set(url, s);
+      get: async (url: string, lang: string) => store.get(`${url}|${lang}`) ?? null,
+      set: async (url: string, lang: string, s: Summary) => {
+        store.set(`${url}|${lang}`, s);
       },
     },
     language,
@@ -31,6 +31,18 @@ const input = { url: 'https://example.com/a', title: 'T', siteName: 'S', text: '
 const good = { english: 'A short summary.', translation: 'ملخص قصير.' };
 
 describe('performSummary', () => {
+  it('keeps one summary per language', async () => {
+    const page = { ...input, url: 'https://example.com/d' };
+    const deps = fakeDeps([good, { english: 'A short summary.', translation: 'Un resumen corto.' }]);
+    await performSummary(page, deps);
+    deps.language = 'es';
+    const res = await performSummary(page, deps);
+    expect(res.ok && res.cached).toBe(false);
+    expect(res.ok && res.summary.language).toBe('es');
+    expect(deps.calls).toBe(2);
+    expect(deps.store.size).toBe(2);
+  });
+
   it('writes an English-only summary when the reader chose no translation', async () => {
     const deps = fakeDeps([{ english: 'A short summary.' }], 0, 'none');
     const res = await performSummary({ ...input, url: 'https://example.com/e' }, deps);

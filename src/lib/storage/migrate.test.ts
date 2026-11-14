@@ -1,5 +1,8 @@
-import { describe, expect, it } from 'vitest';
-import { migrateCard, migrateSavedItem } from '@/lib/storage/migrate';
+import { beforeEach, describe, expect, it } from 'vitest';
+import { fakeBrowser } from 'wxt/testing/fake-browser';
+import { cacheStats, setCachedCard } from '@/lib/storage/cache';
+import { migrateCard, migrateSavedItem, prepareStorage } from '@/lib/storage/migrate';
+import { getPrefs } from '@/lib/storage/settings';
 import type { Card, SavedItem } from '@/lib/types';
 
 /** Cards as they were stored before translations had a language. */
@@ -91,5 +94,42 @@ describe('migrateSavedItem', () => {
   it('returns an item that is already converted unchanged', () => {
     const once = migrateSavedItem(oldItem);
     expect(migrateSavedItem(once)).toBe(once);
+  });
+});
+
+describe('prepareStorage', () => {
+  beforeEach(() => fakeBrowser.reset());
+
+  it('keeps an existing install on Arabic and Advanced, converts saved words and drops cached answers', async () => {
+    await fakeBrowser.storage.local.set({ prefs: { theme: 'light' }, saved: [oldItem] });
+    await setCachedCard('k1', migrateCard(oldSentence));
+    await prepareStorage('update', 'en-US');
+    expect(await getPrefs()).toEqual({ theme: 'light', language: 'ar', level: 'C1' });
+    expect(await cacheStats()).toEqual({ cards: 0, summaries: 0 });
+    const { saved } = await fakeBrowser.storage.local.get('saved');
+    expect((saved as SavedItem[])[0]?.card).toEqual(migrateCard(oldWord));
+  });
+
+  it('treats an existing install that never changed a setting the same way', async () => {
+    await prepareStorage('update', 'es-ES');
+    expect(await getPrefs()).toEqual({ theme: 'dark', language: 'ar', level: 'C1' });
+  });
+
+  it('starts a new install on the browser language and Upper-intermediate', async () => {
+    await prepareStorage('install', 'es-MX');
+    expect(await getPrefs()).toEqual({ theme: 'dark', language: 'es', level: 'B2' });
+  });
+
+  it('starts a new install in English only when the browser language is English', async () => {
+    await prepareStorage('install', 'en-GB');
+    expect((await getPrefs()).language).toBe('none');
+  });
+
+  it('leaves chosen settings and the cache alone on later updates', async () => {
+    await fakeBrowser.storage.local.set({ prefs: { theme: 'dark', language: 'ja', level: 'B1' } });
+    await setCachedCard('k1', migrateCard(oldSentence));
+    await prepareStorage('update', 'en-US');
+    expect(await getPrefs()).toEqual({ theme: 'dark', language: 'ja', level: 'B1' });
+    expect((await cacheStats()).cards).toBe(1);
   });
 });

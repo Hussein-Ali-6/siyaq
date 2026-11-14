@@ -28,17 +28,18 @@ export async function setCachedCard(key: string, card: Card, at = Date.now()): P
   await browser.storage.local.set({ [CARD_PREFIX + key]: entry });
 }
 
-async function summaryKey(url: string): Promise<string> {
-  return SUMMARY_PREFIX + (await sha256Hex(normalizeUrl(url)));
+async function summaryKey(url: string, language: string): Promise<string> {
+  return SUMMARY_PREFIX + (await sha256Hex(`${normalizeUrl(url)}\u0001${language.toLowerCase()}`));
 }
 
-export async function getCachedSummary(url: string): Promise<Summary | null> {
-  return read<Summary>(await summaryKey(url));
+/** One summary per page and translation language. */
+export async function getCachedSummary(url: string, language: string): Promise<Summary | null> {
+  return read<Summary>(await summaryKey(url, language));
 }
 
-export async function setCachedSummary(url: string, summary: Summary, at = Date.now()): Promise<void> {
+export async function setCachedSummary(url: string, language: string, summary: Summary, at = Date.now()): Promise<void> {
   const entry: Entry<Summary> = { v: summary, at };
-  await browser.storage.local.set({ [await summaryKey(url)]: entry });
+  await browser.storage.local.set({ [await summaryKey(url, language)]: entry });
 }
 
 async function allKeys(): Promise<Record<string, unknown>> {

@@ -59,15 +59,36 @@ function fakeDeps(
   return deps;
 }
 
+const arabicC1: Reader = { language: 'ar', level: 'C1' };
+
 describe('cacheKeyFor', () => {
   it('differs between models so one model never reuses another model\'s answer', async () => {
     const req = wordRequest();
-    expect(await cacheKeyFor(req, 'anthropic:claude-sonnet-5-5')).not.toBe(await cacheKeyFor(req, 'openai:gpt-x'));
-    expect(await cacheKeyFor(req, 'openai:gpt-x')).toBe(await cacheKeyFor(req, 'openai:gpt-x'));
+    expect(await cacheKeyFor(req, 'anthropic:claude-sonnet-5-5', arabicC1)).not.toBe(await cacheKeyFor(req, 'openai:gpt-x', arabicC1));
+    expect(await cacheKeyFor(req, 'openai:gpt-x', arabicC1)).toBe(await cacheKeyFor(req, 'openai:gpt-x', arabicC1));
+  });
+
+  it('differs between languages and levels, ignoring the case of the language id', async () => {
+    const req = wordRequest();
+    const model = 'openai:gpt-x';
+    const base = await cacheKeyFor(req, model, arabicC1);
+    expect(await cacheKeyFor(req, model, { language: 'es', level: 'C1' })).not.toBe(base);
+    expect(await cacheKeyFor(req, model, { language: 'ar', level: 'B1' })).not.toBe(base);
+    expect(await cacheKeyFor(req, model, { language: 'x:Kurdish', level: 'B2' })).toBe(await cacheKeyFor(req, model, { language: 'x:kurdish', level: 'B2' }));
   });
 });
 
 describe('performLookup', () => {
+  it('does not reuse a cached card after the language changes', async () => {
+    const spanish = { ...goodAnswer, translation: 'rechazar', sentenceTranslation: 'Rechazaron la oferta.' };
+    const deps = fakeDeps([goodAnswer, spanish]);
+    await performLookup(wordRequest(), deps);
+    deps.reader = { language: 'es', level: 'C1' };
+    const res = await performLookup(wordRequest(), deps);
+    expect(res.ok && res.cached).toBe(false);
+    expect(deps.calls).toBe(2);
+  });
+
   it('asks for the reader\'s language and level and records the language on the card', async () => {
     const spanish = { ...goodAnswer, translation: 'rechazar', sentenceTranslation: 'Rechazaron la oferta.' };
     const deps = fakeDeps([spanish], { language: 'es', level: 'B2' });

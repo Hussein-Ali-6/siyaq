@@ -7,8 +7,8 @@ import { normalizeUrl } from '@/lib/storage/url';
 import type { Summary, SummaryResponse } from '@/lib/types';
 
 export interface SummaryCache {
-  get(url: string): Promise<Summary | null>;
-  set(url: string, summary: Summary): Promise<void>;
+  get(url: string, language: string): Promise<Summary | null>;
+  set(url: string, language: string, summary: Summary): Promise<void>;
 }
 
 export interface SummaryDeps {
@@ -55,7 +55,7 @@ async function summarize(input: SummaryInput, deps: SummaryDeps): Promise<Summar
     }
     const validated = validateSummary(json, deps.language);
     if (validated.ok) {
-      await deps.cache.set(input.url, validated.card);
+      await deps.cache.set(input.url, deps.language, validated.card);
       log.info('summary_ok', { attempt });
       return { ok: true, summary: validated.card, cached: false };
     }
@@ -65,14 +65,14 @@ async function summarize(input: SummaryInput, deps: SummaryDeps): Promise<Summar
   return { ok: false, error: { code: 'invalid_answer', message: 'The model gave an unusable summary twice.' } };
 }
 
-/** Summarises a page once: cached per URL, and concurrent callers share one request. */
+/** Summarises a page once per language: cached per URL and language, and concurrent callers share one request. */
 export async function performSummary(input: SummaryInput, deps: SummaryDeps): Promise<SummaryResponse> {
   if (!input.text.trim()) {
     return { ok: false, error: { code: 'bad_request', message: 'This page has no readable text to summarise.' } };
   }
-  const cached = await deps.cache.get(input.url);
+  const cached = await deps.cache.get(input.url, deps.language);
   if (cached) return { ok: true, summary: cached, cached: true };
-  const key = normalizeUrl(input.url);
+  const key = `${normalizeUrl(input.url)}\u0001${deps.language.toLowerCase()}`;
   const existing = inflight.get(key);
   if (existing) return existing;
   const run = summarize(input, deps).finally(() => inflight.delete(key));
