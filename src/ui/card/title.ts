@@ -1,3 +1,4 @@
+import { NO_TRANSLATION } from '@/lib/languages';
 import type { CardEntry } from './state';
 
 /**
@@ -10,5 +11,5 @@ export function cardTitle(entry: CardEntry, showSummary: boolean): string {
   if (entry.status === 'loading') return isWord ? 'Looking up…' : 'Reading…';
   if (entry.status === 'error') return isWord ? entry.selection : 'Sentence';
   if (entry.card?.kind === 'word') return entry.card.headword;
-  return entry.card?.language === 'none' ? 'Explanation' : 'Translation';
+  return entry.card?.language === NO_TRANSLATION ? 'Explanation' : 'Translation';
 }

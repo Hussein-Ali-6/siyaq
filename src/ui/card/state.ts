@@ -29,6 +29,14 @@ export interface SummaryState {
   error?: UserError;
 }
 
+/**
+ * True when a ready summary is in a different language from a card that has just arrived, which means
+ * the reader changed the translation language while this page was open.
+ */
+export function summaryIsInAnotherLanguage(summary: SummaryState, cardLanguage: string): boolean {
+  return summary.status === 'ready' && !!summary.summary && summary.summary.language.toLowerCase() !== cardLanguage.toLowerCase();
+}
+
 export interface CardState {
   theme: 'dark' | 'light';
   /** Trigger icon position in page coordinates, or null when hidden. */

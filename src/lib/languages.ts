@@ -8,8 +8,10 @@ export interface Language {
   /** BCP 47 code, also used as the HTML lang attribute. */
   id: string;
   nativeName: string;
-  /** Also the name used in prompts. */
+  /** The name in the list and in exports. Also the name used in prompts, unless `promptName` is set. */
   englishName: string;
+  /** The name used in prompts when the list name would read badly inside a sentence. */
+  promptName?: string;
   dir: 'ltr' | 'rtl';
   /** Unicode script names, "|"-separated. Absent means translations get no script check. */
   script?: string;
@@ -26,8 +28,8 @@ export const LANGUAGES: readonly Language[] = [
   { id: 'ar', nativeName: 'العربية', englishName: 'Arabic', dir: 'rtl', script: 'Arabic', variety: 'Modern Standard Arabic' },
   { id: 'bn', nativeName: 'বাংলা', englishName: 'Bengali', dir: 'ltr', script: 'Bengali' },
   { id: 'bg', nativeName: 'Български', englishName: 'Bulgarian', dir: 'ltr', script: 'Cyrillic' },
-  { id: 'zh-Hans', nativeName: '简体中文', englishName: 'Chinese (Simplified)', dir: 'ltr', script: 'Han' },
-  { id: 'zh-Hant', nativeName: '繁體中文', englishName: 'Chinese (Traditional)', dir: 'ltr', script: 'Han' },
+  { id: 'zh-Hans', nativeName: '简体中文', englishName: 'Chinese (Simplified)', promptName: 'Simplified Chinese', dir: 'ltr', script: 'Han' },
+  { id: 'zh-Hant', nativeName: '繁體中文', englishName: 'Chinese (Traditional)', promptName: 'Traditional Chinese', dir: 'ltr', script: 'Han' },
   { id: 'cs', nativeName: 'Čeština', englishName: 'Czech', dir: 'ltr' },
   { id: 'da', nativeName: 'Dansk', englishName: 'Danish', dir: 'ltr' },
   { id: 'nl', nativeName: 'Nederlands', englishName: 'Dutch', dir: 'ltr' },
@@ -47,8 +49,8 @@ export const LANGUAGES: readonly Language[] = [
   { id: 'nb', nativeName: 'Norsk', englishName: 'Norwegian', dir: 'ltr' },
   { id: 'fa', nativeName: 'فارسی', englishName: 'Persian', dir: 'rtl', script: 'Arabic' },
   { id: 'pl', nativeName: 'Polski', englishName: 'Polish', dir: 'ltr' },
-  { id: 'pt-BR', nativeName: 'Português (Brasil)', englishName: 'Portuguese (Brazil)', dir: 'ltr' },
-  { id: 'pt-PT', nativeName: 'Português (Portugal)', englishName: 'Portuguese (Portugal)', dir: 'ltr' },
+  { id: 'pt-BR', nativeName: 'Português (Brasil)', englishName: 'Portuguese (Brazil)', promptName: 'Brazilian Portuguese', dir: 'ltr' },
+  { id: 'pt-PT', nativeName: 'Português (Portugal)', englishName: 'Portuguese (Portugal)', promptName: 'European Portuguese', dir: 'ltr' },
   { id: 'ro', nativeName: 'Română', englishName: 'Romanian', dir: 'ltr' },
   { id: 'ru', nativeName: 'Русский', englishName: 'Russian', dir: 'ltr', script: 'Cyrillic' },
   // Serbian is written in Cyrillic and in Latin, so it gets no script check.
@@ -70,7 +72,7 @@ export interface ResolvedLanguage {
   id: string;
   /** The language's own name, or the typed name. */
   label: string;
-  /** The English name used in prompts and exports, or the typed name. */
+  /** The English name used in prompts, or the typed name. */
   promptName: string;
   dir: 'ltr' | 'rtl' | 'auto';
   /** HTML lang attribute. Absent for typed languages. */
@@ -88,8 +90,10 @@ export function otherLanguageName(id: string): string {
 
 /** Builds the id for a language the reader typed. Null when nothing usable was typed. */
 export function otherLanguageId(name: string): string | null {
-  const clean = name.replace(/[\p{Cc}\p{Cf}]/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, MAX_OTHER_NAME).trim();
-  return clean ? OTHER_PREFIX + clean : null;
+  const clean = name.replace(/[\p{Cc}\p{Cf}]/gu, ' ').replace(/\s+/g, ' ').trim();
+  // Cut by code point, so a character that takes two code units is kept whole or left out.
+  const cut = Array.from(clean).slice(0, MAX_OTHER_NAME).join('').trim();
+  return cut ? OTHER_PREFIX + cut : null;
 }
 
 /** The id for a language name typed by the reader: the listed language when the name is one of the list's names, English only for "English", otherwise a typed language. Null when the name is empty. */
@@ -98,7 +102,7 @@ export function languageIdFromName(name: string): string | null {
   if (!typed) return null;
   const clean = typed.slice(OTHER_PREFIX.length).toLowerCase();
   if (clean === 'english') return NO_TRANSLATION;
-  const match = LANGUAGES.find((l) => l.englishName.toLowerCase() === clean || l.nativeName.toLowerCase() === clean);
+  const match = LANGUAGES.find((l) => [l.englishName, l.nativeName, l.promptName].some((n) => n?.toLowerCase() === clean));
   return match ? match.id : typed;
 }
 
@@ -109,7 +113,7 @@ export function resolveLanguage(id: string): ResolvedLanguage {
     return {
       id: listed.id,
       label: listed.nativeName,
-      promptName: listed.englishName,
+      promptName: listed.promptName ?? listed.englishName,
       dir: listed.dir,
       lang: listed.id,
       ...(listed.script ? { script: listed.script } : {}),
@@ -120,9 +124,10 @@ export function resolveLanguage(id: string): ResolvedLanguage {
   return { id, label: name, promptName: name, dir: 'auto' };
 }
 
-/** For exports: the English name, the typed name, or "English only". */
+/** For exports: the English name as the list shows it, the typed name, or "English only". */
 export function languageName(id: string): string {
-  return id === NO_TRANSLATION ? 'English only' : resolveLanguage(id).promptName;
+  if (id === NO_TRANSLATION) return 'English only';
+  return byId.get(id.toLowerCase())?.englishName ?? resolveLanguage(id).promptName;
 }
 
 /** For the reader: the language's own name, the typed name, or "English only". */
@@ -143,7 +148,7 @@ export function hasScript(text: string, script: string): boolean {
 export function languageFromBrowser(uiLanguage: string): string {
   const tag = uiLanguage.trim().replace(/_/g, '-').toLowerCase();
   const base = tag.split('-')[0] ?? '';
-  if (base === 'zh') return /-(tw|hk|hant)(-|$)/.test(tag) ? 'zh-Hant' : 'zh-Hans';
+  if (base === 'zh') return /-(tw|hk|mo|hant)(-|$)/.test(tag) ? 'zh-Hant' : 'zh-Hans';
   if (base === 'pt') return tag === 'pt-pt' ? 'pt-PT' : 'pt-BR';
   if (base === 'no' || base === 'nn') return 'nb';
   if (base === 'tl') return 'fil';

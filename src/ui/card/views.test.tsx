@@ -4,7 +4,7 @@ import type { DictionaryCard, TranslationCard } from '@/lib/types';
 import { DictionaryView } from '@/ui/card/DictionaryView';
 import { SummaryView } from '@/ui/card/SummaryView';
 import { TranslationView } from '@/ui/card/TranslationView';
-import type { CardEntry } from '@/ui/card/state';
+import { summaryIsInAnotherLanguage, type CardEntry } from '@/ui/card/state';
 import { cardTitle } from '@/ui/card/title';
 import { Translated } from '@/ui/components/Translated';
 
@@ -132,5 +132,27 @@ describe('cardTitle', () => {
     expect(cardTitle(entry({ kind: 'word', selection: 'turned', status: 'error' }), false)).toBe('turned');
     expect(cardTitle(entry({ kind: 'word', selection: 'turned', card: word }), false)).toBe('turn down');
     expect(cardTitle(entry({ card: sentence }), true)).toBe('Article summary');
+  });
+});
+
+describe('summaryIsInAnotherLanguage', () => {
+  const ready = (language: string) => ({ status: 'ready' as const, summary: { language, english: 'A summary.' } });
+
+  it('is true when a ready summary is in a different language from a new card', () => {
+    expect(summaryIsInAnotherLanguage(ready('ar'), 'es')).toBe(true);
+    expect(summaryIsInAnotherLanguage(ready('ar'), 'none')).toBe(true);
+    expect(summaryIsInAnotherLanguage(ready('none'), 'ja')).toBe(true);
+  });
+
+  it('is false when the languages match, whatever the case of the id', () => {
+    expect(summaryIsInAnotherLanguage(ready('ar'), 'ar')).toBe(false);
+    expect(summaryIsInAnotherLanguage(ready('none'), 'none')).toBe(false);
+    expect(summaryIsInAnotherLanguage(ready('x:Kurdish'), 'x:kurdish')).toBe(false);
+  });
+
+  it('is false while there is no summary to replace', () => {
+    expect(summaryIsInAnotherLanguage({ status: 'idle' }, 'es')).toBe(false);
+    expect(summaryIsInAnotherLanguage({ status: 'loading' }, 'es')).toBe(false);
+    expect(summaryIsInAnotherLanguage({ status: 'error', error: { code: 'network', message: 'Offline.' } }, 'es')).toBe(false);
   });
 });

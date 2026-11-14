@@ -10,7 +10,15 @@ import { sentenceSegments } from '@/lib/text/tokens';
 import { normalizeWhitespace } from '@/lib/text/words';
 import type { LookupRequest, LookupResponse, PageContext, UserError } from '@/lib/types';
 import { createCardUi, type CardUi } from '@/ui/card/mount';
-import { initialCardState, type CardActions, type CardEntry, type CardState, type PageRect, type SummaryState } from '@/ui/card/state';
+import {
+  initialCardState,
+  summaryIsInAnotherLanguage,
+  type CardActions,
+  type CardEntry,
+  type CardState,
+  type PageRect,
+  type SummaryState,
+} from '@/ui/card/state';
 
 interface EntryContext {
   request: LookupRequest;
@@ -217,6 +225,12 @@ export class SiyaqController {
     } else {
       entry.sentence = entry.selection;
       entry.sentenceSegments = [{ text: entry.selection }];
+    }
+    // The card says which language the reader has now. A summary in another one is from before they
+    // changed it, so this page gets a new summary, and later lookups here carry it.
+    if (summaryIsInAnotherLanguage(this.state.summary, res.card.language)) {
+      this.state.summary = { status: 'idle' };
+      this.ensureSummary();
     }
     this.render();
     try {

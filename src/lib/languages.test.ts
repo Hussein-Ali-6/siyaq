@@ -51,6 +51,22 @@ describe('resolveLanguage', () => {
     expect(resolveLanguage('PT-br').id).toBe('pt-BR');
   });
 
+  it('gives the four languages with a bracketed list name a name that reads well in a sentence', () => {
+    expect(resolveLanguage('zh-Hans').promptName).toBe('Simplified Chinese');
+    expect(resolveLanguage('zh-Hant').promptName).toBe('Traditional Chinese');
+    expect(resolveLanguage('pt-BR').promptName).toBe('Brazilian Portuguese');
+    expect(resolveLanguage('pt-PT').promptName).toBe('European Portuguese');
+    expect(resolveLanguage('zh-Hans').label).toBe('简体中文');
+  });
+
+  it('uses the English name in prompts for every other listed language, and has no brackets in any prompt name', () => {
+    for (const l of LANGUAGES) {
+      const { promptName } = resolveLanguage(l.id);
+      expect(promptName).not.toMatch(/[()]/);
+      if (!/[()]/.test(l.englishName)) expect(promptName).toBe(l.englishName);
+    }
+  });
+
   it('treats a typed language and an unknown code as a name with automatic direction', () => {
     expect(resolveLanguage('x:Kurdish')).toEqual({ id: 'x:Kurdish', label: 'Kurdish', promptName: 'Kurdish', dir: 'auto' });
     expect(resolveLanguage('tlh')).toEqual({ id: 'tlh', label: 'tlh', promptName: 'tlh', dir: 'auto' });
@@ -62,6 +78,12 @@ describe('typed languages', () => {
     expect(otherLanguageId('  Kurdish \n (Sorani) ')).toBe('x:Kurdish (Sorani)');
     expect(otherLanguageId('a'.repeat(60))).toBe(`x:${'a'.repeat(40)}`);
     expect(otherLanguageId('Zulu‮')).toBe('x:Zulu');
+  });
+
+  it('cuts a long name by whole characters, never in the middle of one', () => {
+    expect(otherLanguageId('a'.repeat(39) + '😀')).toBe(`x:${'a'.repeat(39)}😀`);
+    expect(otherLanguageId('a'.repeat(39) + '😀😀')).toBe(`x:${'a'.repeat(39)}😀`);
+    expect(otherLanguageId('a'.repeat(40) + '😀')).toBe(`x:${'a'.repeat(40)}`);
   });
 
   it('returns null when nothing usable was typed', () => {
@@ -79,6 +101,10 @@ describe('typed languages', () => {
 describe('language names for people', () => {
   it('gives the English name, the typed name, or "English only"', () => {
     expect(languageName('zh-Hans')).toBe('Chinese (Simplified)');
+    expect(languageName('zh-Hant')).toBe('Chinese (Traditional)');
+    expect(languageName('pt-BR')).toBe('Portuguese (Brazil)');
+    expect(languageName('pt-PT')).toBe('Portuguese (Portugal)');
+    expect(languageName('ar')).toBe('Arabic');
     expect(languageName('x:Kurdish')).toBe('Kurdish');
     expect(languageName(NO_TRANSLATION)).toBe('English only');
   });
@@ -107,6 +133,7 @@ describe('languageFromBrowser', () => {
     ['fr-CA', 'fr'],
     ['zh-TW', 'zh-Hant'],
     ['zh-HK', 'zh-Hant'],
+    ['zh-MO', 'zh-Hant'],
     ['zh-Hant-TW', 'zh-Hant'],
     ['zh-CN', 'zh-Hans'],
     ['zh', 'zh-Hans'],
@@ -131,6 +158,9 @@ describe('languageIdFromName', () => {
     expect(languageIdFromName('  arabic ')).toBe('ar');
     expect(languageIdFromName('العربية')).toBe('ar');
     expect(languageIdFromName('Español')).toBe('es');
+    expect(languageIdFromName('Chinese (Simplified)')).toBe('zh-Hans');
+    expect(languageIdFromName('simplified chinese')).toBe('zh-Hans');
+    expect(languageIdFromName('Brazilian Portuguese')).toBe('pt-BR');
     expect(languageIdFromName('English')).toBe('none');
     expect(languageIdFromName('Kurdish')).toBe('x:Kurdish');
     expect(languageIdFromName('Malayalam')).toBe('x:Malayalam');
