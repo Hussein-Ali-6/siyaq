@@ -17,6 +17,7 @@ import { LoadingView } from './LoadingView';
 import { SummaryView } from './SummaryView';
 import { TranslationView } from './TranslationView';
 import type { CardActions, CardState, PageRect } from './state';
+import { cardTitle } from './title';
 
 const WIDTH = 400;
 const GAP = 8;
@@ -59,12 +60,7 @@ export function CardFrame({ state, actions }: { state: CardState; actions: CardA
 
   const isWord = entry.kind === 'word';
   const ready = entry.status === 'ready' && entry.card;
-  let title: string;
-  if (card.showSummary) title = 'Article summary';
-  else if (entry.status === 'loading') title = isWord ? 'Looking up…' : 'Translating…';
-  else if (entry.status === 'error') title = isWord ? entry.selection : 'Translation';
-  else if (entry.card?.kind === 'word') title = entry.card.headword;
-  else title = 'Translation';
+  const title = cardTitle(entry, card.showSummary);
   const pos_ = ready && entry.card?.kind === 'word' && !card.showSummary ? entry.card.partOfSpeech : '';
 
   return (

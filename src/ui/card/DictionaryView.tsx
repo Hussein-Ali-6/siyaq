@@ -1,5 +1,5 @@
 import type { DictionaryCard, Segment } from '@/lib/types';
-import { Arabic } from '@/ui/components/Arabic';
+import { Translated } from '@/ui/components/Translated';
 import { BlurReveal } from '@/ui/components/BlurReveal';
 import { Collapsible } from '@/ui/components/Collapsible';
 import { Pronunciation } from '@/ui/components/Pronunciation';
@@ -23,13 +23,14 @@ export function SentenceText({ segments, sentence }: { segments?: Segment[]; sen
   return <>{sentence}</>;
 }
 
-/** The Arabic for this sense. Cards saved while the explanation was separate also show it. */
-export function ArabicMeaning({ card, className = '' }: { card: DictionaryCard; className?: string }) {
+/** This sense in the reader's language. Cards saved while the explanation was separate also show it. */
+export function TranslatedMeaning({ card, className = '' }: { card: DictionaryCard; className?: string }) {
+  if (!card.translation) return null;
   return (
-    <div dir="rtl" lang="ar" className={`arabic ${className}`}>
+    <Translated as="div" language={card.language} className={className}>
       <p className="text-[16px] font-medium">{card.translation}</p>
       {card.translationNote && <p className="text-[14px] leading-relaxed">{card.translationNote}</p>}
-    </div>
+    </Translated>
   );
 }
 
@@ -39,7 +40,7 @@ export function DictionaryView({ card, segments, sentence }: { card: DictionaryC
       <div className="space-y-1.5">
         <Pronunciation text={card.headword} ipaUk={card.ipaUk} ipaUs={card.ipaUs} />
         <p className="text-[15px] leading-snug">{card.meaning}</p>
-        <ArabicMeaning card={card} />
+        <TranslatedMeaning card={card} />
       </div>
 
       {card.notes.length > 0 && (
@@ -60,11 +61,15 @@ export function DictionaryView({ card, segments, sentence }: { card: DictionaryC
         <p className="whitespace-pre-wrap text-[13.5px] leading-relaxed text-text">
           <SentenceText segments={segments} sentence={sentence} />
         </p>
-        <div className="mt-2 border-t border-border pt-2">
-          <BlurReveal>
-            <Arabic className="text-[14px]">{card.sentenceTranslation}</Arabic>
-          </BlurReveal>
-        </div>
+        {card.sentenceTranslation && (
+          <div className="mt-2 border-t border-border pt-2">
+            <BlurReveal>
+              <Translated language={card.language} className="text-[14px]">
+                {card.sentenceTranslation}
+              </Translated>
+            </BlurReveal>
+          </div>
+        )}
       </section>
 
       {card.examples.length > 0 && (
@@ -99,9 +104,11 @@ export function DictionaryView({ card, segments, sentence }: { card: DictionaryC
             {card.otherMeanings.map((m, i) => (
               <li key={i} className="flex flex-col gap-0.5 border-l-2 border-border pl-2.5">
                 <span>{m.meaning}</span>
-                <Arabic as="span" className="text-[13px] text-muted">
-                  {m.translation}
-                </Arabic>
+                {m.translation && (
+                  <Translated as="span" language={card.language} className="text-[13px] text-muted">
+                    {m.translation}
+                  </Translated>
+                )}
               </li>
             ))}
           </ul>

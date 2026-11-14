@@ -36,6 +36,29 @@ const translation: TranslationCard = {
   ],
 };
 
+const dictionarySpanish: DictionaryCard = {
+  ...dictionary,
+  language: 'es',
+  translation: 'rechazar',
+  sentenceTranslation: 'Tras un breve debate, la junta rechazó la oferta.',
+  otherMeanings: [
+    { meaning: 'to reduce the sound, heat or power of a machine', translation: 'bajar' },
+    { meaning: 'to fold part of something downwards', translation: 'doblar hacia abajo' },
+  ],
+};
+const { translation: _dt, sentenceTranslation: _ds, ...dictionaryEnglish } = dictionary;
+const dictionaryEnglishOnly: DictionaryCard = {
+  ...dictionaryEnglish,
+  language: 'none',
+  otherMeanings: dictionary.otherMeanings.map((m) => ({ meaning: m.meaning })),
+};
+const explanation: TranslationCard = {
+  kind: 'sentence',
+  language: 'none',
+  plainEnglish: translation.plainEnglish,
+  keyExpressions: translation.keyExpressions.map(({ translation: _kt, ...k }) => k),
+};
+
 const longSelection =
   'The deal fell through at the last minute, and the investors walked away with nothing. Notwithstanding the foregoing, the licensee shall indemnify the licensor against any claims by others arising from its use of the software.';
 const sentenceText = 'After a short debate it turned the offer down.';
@@ -112,6 +135,19 @@ const scenarios: Array<{ name: string; state: () => CardState }> = [
         stack: [entry({ kind: 'word', status: 'error', error: { code: 'no_key', message: 'Add your Anthropic API key in Siyaq settings.' } })],
       },
     }),
+  },
+  { name: 'dictionary spanish', state: () => ({ ...base(), card: { anchor, showSummary: false, stack: [ready({ card: dictionarySpanish })] } }) },
+  { name: 'dictionary english only', state: () => ({ ...base(), card: { anchor, showSummary: false, stack: [ready({ card: dictionaryEnglishOnly })] } }) },
+  {
+    name: 'explanation english only',
+    state: () => ({
+      ...base(),
+      card: { anchor, showSummary: false, stack: [entry({ kind: 'sentence', status: 'ready', card: explanation, id: 'z', selection: longSelection })] },
+    }),
+  },
+  {
+    name: 'summary english only',
+    state: () => ({ ...base(), summary: { status: 'ready', summary: { language: 'none', english: summaryText.english } }, card: { anchor, showSummary: true, stack: [ready()] } }),
   },
   { name: 'summary', state: () => ({ ...base(), summary: { status: 'ready', summary: summaryText }, card: { anchor, showSummary: true, stack: [ready()] } }) },
   { name: 'summary loading', state: () => ({ ...base(), summary: { status: 'loading' }, card: { anchor, showSummary: true, stack: [ready()] } }) },

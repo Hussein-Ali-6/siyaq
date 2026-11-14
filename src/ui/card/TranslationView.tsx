@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { TranslationCard } from '@/lib/types';
-import { Arabic } from '@/ui/components/Arabic';
+import { Translated } from '@/ui/components/Translated';
 import { SpeakButton } from '@/ui/components/SpeakButton';
 
 export function TranslationView({
@@ -29,7 +29,11 @@ export function TranslationView({
         </div>
       </div>
 
-      <Arabic className="whitespace-pre-wrap text-[15px]">{card.translation}</Arabic>
+      {card.translation && (
+        <Translated language={card.language} className="whitespace-pre-wrap text-[15px]">
+          {card.translation}
+        </Translated>
+      )}
 
       {card.plainEnglish && (
         <section className="space-y-1.5">
@@ -53,9 +57,11 @@ export function TranslationView({
                   <span className="font-semibold text-amber">{k.expression}</span>
                   <span className="text-muted"> · </span>
                   <span className="text-[13px]">{k.meaning}</span>
-                  <Arabic as="span" className="ml-2 inline-block text-[13px] text-muted">
-                    {k.translation}
-                  </Arabic>
+                  {k.translation && (
+                    <Translated as="span" language={card.language} className="ml-2 inline-block text-[13px] text-muted">
+                      {k.translation}
+                    </Translated>
+                  )}
                 </button>
               </li>
             ))}

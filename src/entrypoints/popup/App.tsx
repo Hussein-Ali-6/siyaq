@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { browser } from 'wxt/browser';
 import { sendMessage, type ProviderStatus } from '@/lib/messaging';
-import { Arabic } from '@/ui/components/Arabic';
+import { Translated } from '@/ui/components/Translated';
 import { Skeleton } from '@/ui/components/Skeleton';
 import { useTheme } from '@/ui/components/useTheme';
 import type { SummaryState } from '@/ui/card/state';
@@ -88,7 +88,11 @@ export function App() {
             {summary.status === 'ready' && summary.summary ? (
               <div className="max-h-[360px] space-y-3 overflow-y-auto rounded-xl border border-border bg-surface p-3">
                 <p className="whitespace-pre-wrap text-[13px] leading-relaxed">{summary.summary.english}</p>
-                <Arabic className="whitespace-pre-wrap border-t border-border pt-2 text-[13px]">{summary.summary.translation}</Arabic>
+                {summary.summary.translation && (
+                  <Translated language={summary.summary.language} className="whitespace-pre-wrap border-t border-border pt-2 text-[13px]">
+                    {summary.summary.translation}
+                  </Translated>
+                )}
               </div>
             ) : summary.status === 'loading' ? (
               <div className="rounded-xl border border-border bg-surface p-3">

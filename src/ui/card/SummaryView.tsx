@@ -1,4 +1,4 @@
-import { Arabic } from '@/ui/components/Arabic';
+import { Translated } from '@/ui/components/Translated';
 import { Skeleton } from '@/ui/components/Skeleton';
 import type { SummaryState } from './state';
 
@@ -7,7 +7,11 @@ export function SummaryView({ summary }: { summary: SummaryState }) {
     return (
       <div className="space-y-4">
         <p className="whitespace-pre-wrap text-[14px] leading-relaxed">{summary.summary.english}</p>
-        <Arabic className="whitespace-pre-wrap border-t border-border pt-3">{summary.summary.translation}</Arabic>
+        {summary.summary.translation && (
+          <Translated language={summary.summary.language} className="whitespace-pre-wrap border-t border-border pt-3">
+            {summary.summary.translation}
+          </Translated>
+        )}
       </div>
     );
   }

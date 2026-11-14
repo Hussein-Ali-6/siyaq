@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { browser } from 'wxt/browser';
 import { listSaved, removeSaved, searchSaved, toCsv, toJson } from '@/lib/storage/saved';
 import type { SavedItem } from '@/lib/types';
-import { ArabicMeaning, SentenceText } from '@/ui/card/DictionaryView';
-import { Arabic } from '@/ui/components/Arabic';
+import { SentenceText, TranslatedMeaning } from '@/ui/card/DictionaryView';
 import { ExternalIcon, TrashIcon } from '@/ui/components/icons';
 import { LookupLinks } from '@/ui/components/LookupLinks';
 import { Pronunciation } from '@/ui/components/Pronunciation';
 import { SpeakButton } from '@/ui/components/SpeakButton';
+import { Translated } from '@/ui/components/Translated';
 import { useTheme } from '@/ui/components/useTheme';
 
 type Filter = 'all' | 'word' | 'sentence';
@@ -104,11 +104,15 @@ export function App() {
                       </div>
                       <Pronunciation text={item.card.headword} ipaUk={item.card.ipaUk} ipaUs={item.card.ipaUs} />
                       <p className="text-[14px]">{item.card.meaning}</p>
-                      <ArabicMeaning card={item.card} />
+                      <TranslatedMeaning card={item.card} />
                       <p className="whitespace-pre-wrap rounded-xl bg-surface-2 p-3 text-[13px] leading-relaxed">
                         <SentenceText segments={item.sentenceSegments} sentence={item.sentence} />
                       </p>
-                      <Arabic className="text-[13px] text-muted">{item.card.sentenceTranslation}</Arabic>
+                      {item.card.sentenceTranslation && (
+                        <Translated language={item.card.language} className="text-[13px] text-muted">
+                          {item.card.sentenceTranslation}
+                        </Translated>
+                      )}
                     </>
                   ) : (
                     <>
@@ -117,7 +121,13 @@ export function App() {
                         <SpeakButton text={item.selection} accent="uk" label="UK" />
                         <SpeakButton text={item.selection} accent="us" label="US" />
                       </div>
-                      <Arabic className="whitespace-pre-wrap text-[14px]">{item.card.translation}</Arabic>
+                      {item.card.translation ? (
+                        <Translated language={item.card.language} className="whitespace-pre-wrap text-[14px]">
+                          {item.card.translation}
+                        </Translated>
+                      ) : (
+                        <p className="text-[14px] leading-relaxed">{item.card.plainEnglish}</p>
+                      )}
                     </>
                   )}
                   <p className="flex flex-wrap items-center gap-x-3 text-[12px] text-faint">
