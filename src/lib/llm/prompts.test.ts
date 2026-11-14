@@ -43,6 +43,31 @@ describe('system prompts', () => {
     expect(dictionarySystem({ language: 'none', level: 'C1' })).toContain('wants explanations in English only');
   });
 
+  it('open naturally for a reader who chose English only', () => {
+    const dictionary = dictionarySystem({ language: 'none', level: 'C1' });
+    const sentence = translationSystem({ language: 'none', level: 'B2' });
+    expect(dictionary).toContain(
+      'a context-aware English dictionary for one reader: someone who reads English at about C1 level and wants explanations in English only. While reading',
+    );
+    expect(sentence).toContain(
+      'a reading helper for one reader: someone who reads English at about B2 level and wants explanations in English only. While reading',
+    );
+    for (const text of [dictionary, sentence]) expect(text).not.toContain('a reader who reads');
+  });
+
+  it('use a name that reads well in a sentence for a language whose list name has brackets', () => {
+    const reader: Reader = { language: 'zh-Hans', level: 'B2' };
+    const dictionary = dictionarySystem(reader);
+    const sentence = translationSystem(reader);
+    const summary = summarySystem('zh-Hans');
+    expect(dictionary).toContain('a native speaker of Simplified Chinese who reads English at about B2 level');
+    expect(dictionary).toContain('- translation: the Simplified Chinese for this sense');
+    expect(sentence).toContain('as a skilled Simplified Chinese writer would express the same meaning');
+    expect(summary).toContain('the same summary in natural Simplified Chinese, as a skilled Simplified Chinese writer would put it');
+    for (const text of [dictionary, sentence, summary]) expect(text).not.toContain('Chinese (Simplified)');
+    expect(summarySystem('pt-BR')).toContain('a native speaker of Brazilian Portuguese');
+  });
+
   it('name the language in the field rules and ask for its written standard', () => {
     expect(dictionarySystem(spanishB2)).toContain('- translation: the Spanish for this sense');
     expect(dictionarySystem(spanishB2)).toContain('- sentenceTranslation: a natural Spanish translation');
@@ -61,6 +86,25 @@ describe('system prompts', () => {
   it('say after the examples that the translation fields are still required', () => {
     expect(dictionarySystem(spanishB2)).toContain('Your answer must include them, written in Spanish');
     expect(translationSystem(spanishB2)).toContain('Your answer must include them, written in Spanish');
+  });
+
+  it('ask for the punctuation the translation language uses in print', () => {
+    const afterExamples = 'Your answer must include them, written in Spanish, with the punctuation that language uses in print.';
+    expect(dictionarySystem(spanishB2).endsWith(afterExamples)).toBe(true);
+    expect(translationSystem(spanishB2).endsWith(afterExamples)).toBe(true);
+    expect(summarySystem('es')).toContain(
+      '- translation: the same summary in natural Spanish, as a skilled Spanish writer would put it, with the punctuation that language uses in print.',
+    );
+    expect(dictionarySystem(arabicC1)).toContain('written in Arabic, with the punctuation that language uses in print.');
+    expect(translationSystem({ language: 'x:Kurdish', level: 'B1' })).toContain('written in Kurdish, with the punctuation that language uses in print.');
+  });
+
+  it('say nothing about punctuation in print for English only', () => {
+    const reader: Reader = { language: 'none', level: 'B2' };
+    for (const text of [dictionarySystem(reader), translationSystem(reader), summarySystem('none')]) {
+      expect(text).not.toContain('punctuation that language uses');
+      expect(text).not.toContain('in print');
+    }
   });
 
   it('leave translation fields out for English only and always ask for plainer English', () => {

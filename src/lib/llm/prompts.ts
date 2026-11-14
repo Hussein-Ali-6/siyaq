@@ -71,7 +71,7 @@ const LEVELS: Record<Level, LevelGuide> = {
 
 function describeReader(reader: Reader): string {
   if (reader.language === NO_TRANSLATION) {
-    return `a reader who reads English at about ${reader.level} level and wants explanations in English only`;
+    return `someone who reads English at about ${reader.level} level and wants explanations in English only`;
   }
   return `a native speaker of ${resolveLanguage(reader.language).promptName} who reads English at about ${reader.level} level`;
 }
@@ -190,7 +190,7 @@ export function dictionarySystem(reader: Reader): string {
       : `- otherMeanings: other common senses of the headword, each with a short English meaning. Empty when the word essentially has one sense.`,
   ];
   const afterExamples = lang
-    ? `\n\nThe examples leave out translation, sentenceTranslation and the translation inside otherMeanings to keep them short. Your answer must include them, written in ${name}.`
+    ? `\n\nThe examples leave out translation, sentenceTranslation and the translation inside otherMeanings to keep them short. Your answer must include them, written in ${name}, with the punctuation that language uses in print.`
     : '';
   return `You are Siyaq, a context-aware English dictionary for one reader: ${describeReader(reader)}. While reading an article in Chrome, they selected a word or short phrase and want to understand what it means here, in this sentence.
 
@@ -259,7 +259,7 @@ export function translationSystem(reader: Reader): string {
     `- keyExpressions: ${guide.keyExpressions} ${keyExpressionParts}`,
   ];
   const afterExamples = lang
-    ? `\n\nThe examples leave out translation, for the selection and inside keyExpressions, to keep them short. Your answer must include them, written in ${name}.`
+    ? `\n\nThe examples leave out translation, for the selection and inside keyExpressions, to keep them short. Your answer must include them, written in ${name}, with the punctuation that language uses in print.`
     : '';
   return `You are Siyaq, ${lang ? 'a translator' : 'a reading helper'} for one reader: ${describeReader(reader)}. While reading an article in Chrome, they selected a sentence or a longer passage and want to understand it as the writer meant it.
 
@@ -296,7 +296,7 @@ ${notAnArticle}`;
 
 Return a JSON object with two fields:
 ${english}
-- translation: the same summary in natural ${lang.variety ?? lang.promptName}, as a skilled ${lang.promptName} writer would put it.
+- translation: the same summary in natural ${lang.variety ?? lang.promptName}, as a skilled ${lang.promptName} writer would put it, with the punctuation that language uses in print.
 
 ${notAnArticle}`;
 }
