@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
 import { cacheStats, setCachedCard } from '@/lib/storage/cache';
 import { migrateCard, migrateSavedItem, prepareStorage } from '@/lib/storage/migrate';
@@ -131,5 +131,14 @@ describe('prepareStorage', () => {
     await prepareStorage('update', 'en-US');
     expect(await getPrefs()).toEqual({ theme: 'dark', language: 'ja', level: 'B1' });
     expect((await cacheStats()).cards).toBe(1);
+  });
+
+  it('does not write the saved list when every saved word is already in the new shape', async () => {
+    const converted = migrateSavedItem(oldItem);
+    await fakeBrowser.storage.local.set({ prefs: { language: 'ja', level: 'B1' }, saved: [converted] });
+    const set = vi.spyOn(fakeBrowser.storage.local, 'set');
+    await prepareStorage('update', 'en-US');
+    expect(set).not.toHaveBeenCalled();
+    set.mockRestore();
   });
 });

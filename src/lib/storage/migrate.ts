@@ -57,14 +57,16 @@ export async function prepareStorage(reason: string, uiLanguage: string): Promis
   const prefs = (stored[PREFS_KEY] ?? {}) as Partial<Prefs>;
   if (typeof prefs.language !== 'string') {
     if (reason === 'update') {
-      await setPrefs({ language: 'ar', level: 'C1' });
+      // The caches go first: once a language is stored, a retry would no longer clear them.
       await clearCaches();
+      await setPrefs({ language: 'ar', level: 'C1' });
     } else if (reason === 'install') {
       await setPrefs({ language: languageFromBrowser(uiLanguage), level: 'B2' });
     }
   }
   const saved = stored[SAVED_KEY];
   if (Array.isArray(saved) && saved.length) {
-    await browser.storage.local.set({ [SAVED_KEY]: (saved as SavedItem[]).map(migrateSavedItem) });
+    const converted = (saved as SavedItem[]).map(migrateSavedItem);
+    if (converted.some((item, i) => item !== saved[i])) await browser.storage.local.set({ [SAVED_KEY]: converted });
   }
 }

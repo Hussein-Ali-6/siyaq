@@ -32,8 +32,14 @@ export default defineBackground(() => {
     },
   };
   const summaryCache = { get: getCachedSummary, set: setCachedSummary };
+  // Lookups wait for the install or update step so they never see the settings before the starting language is stored.
+  let storageReady: Promise<void> = Promise.resolve();
+  const readPrefs = async () => {
+    await storageReady;
+    return getPrefs();
+  };
   const currentReader = async (): Promise<Reader> => {
-    const { language, level } = await getPrefs();
+    const { language, level } = await readPrefs();
     return { language, level };
   };
 
@@ -42,11 +48,14 @@ export default defineBackground(() => {
     const local = browser.storage.local as unknown as { setAccessLevel?: (o: { accessLevel: string }) => Promise<void> };
     local.setAccessLevel?.({ accessLevel: 'TRUSTED_CONTEXTS' }).catch(() => undefined);
     // The settings are stored before the options page opens, so it shows the starting language at once.
-    void prepareStorage(reason, browser.i18n.getUILanguage())
-      .catch(() => log.warn('prepare_storage_failed'))
-      .finally(() => {
-        if (reason === 'install') void browser.runtime.openOptionsPage();
-      });
+    const uiLanguage = browser.i18n.getUILanguage();
+    // It is safe to run twice, so a failure is retried once before it is logged.
+    storageReady = prepareStorage(reason, uiLanguage)
+      .catch(() => prepareStorage(reason, uiLanguage))
+      .catch(() => log.warn('prepare_storage_failed'));
+    void storageReady.then(() => {
+      if (reason === 'install') void browser.runtime.openOptionsPage();
+    });
   });
 
   onMessage('lookup', async ({ data }) => {
@@ -55,18 +64,18 @@ export default defineBackground(() => {
     return performLookup(data, { client: r.client, modelId: r.modelId, reader: await currentReader(), cache: cardCache, getSummary: getCachedSummary });
   });
 
-  onMessage('getSummary', async ({ data }) => getCachedSummary(data, (await getPrefs()).language));
+  onMessage('getSummary', async ({ data }) => getCachedSummary(data, (await readPrefs()).language));
 
   onMessage('summarize', async ({ data }) => {
     const r = await resolveActiveClient();
     if ('error' in r) return { ok: false, error: r.error };
-    return performSummary(data, { client: r.client, cache: summaryCache, language: (await getPrefs()).language });
+    return performSummary(data, { client: r.client, cache: summaryCache, language: (await readPrefs()).language });
   });
 
   onMessage('saveItem', ({ data }) => saveItem(data));
   onMessage('unsaveItem', ({ data }) => removeSaved(data));
   onMessage('isSaved', ({ data }) => isSaved(data));
-  onMessage('getPrefs', () => getPrefs());
+  onMessage('getPrefs', () => readPrefs());
 
   onMessage('getStatus', async () => {
     const r = await resolveActiveClient();
