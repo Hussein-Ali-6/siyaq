@@ -137,8 +137,15 @@ export type SummaryResponse =
   | { ok: true; summary: Summary; cached: boolean }
   | { ok: false; error: UserError };
 
+/** CEFR reading level the explanations are written for. */
+export type Level = 'B1' | 'B2' | 'C1';
+
 export interface Prefs {
   theme: 'dark' | 'light';
+  /** Translation language id from `@/lib/languages`: "none", a listed code, or "x:<name>". */
+  language: string;
+  level: Level;
 }
 
-export const DEFAULT_PREFS: Prefs = { theme: 'dark' };
+/** Only the fallback for a read that happens before the install step has stored real values. */
+export const DEFAULT_PREFS: Prefs = { theme: 'dark', language: 'none', level: 'B2' };

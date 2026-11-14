@@ -33,10 +33,11 @@ describe('api key', () => {
 });
 
 describe('prefs', () => {
-  it('defaults to dark and merges partial updates', async () => {
-    expect(await getPrefs()).toEqual({ theme: 'dark' });
-    expect(await setPrefs({ theme: 'light' })).toEqual({ theme: 'light' });
-    expect(await getPrefs()).toEqual({ theme: 'light' });
+  it('defaults to dark, English only and B2, and merges partial updates', async () => {
+    expect(await getPrefs()).toEqual({ theme: 'dark', language: 'none', level: 'B2' });
+    expect(await setPrefs({ theme: 'light' })).toEqual({ theme: 'light', language: 'none', level: 'B2' });
+    expect(await setPrefs({ language: 'es', level: 'C1' })).toEqual({ theme: 'light', language: 'es', level: 'C1' });
+    expect(await getPrefs()).toEqual({ theme: 'light', language: 'es', level: 'C1' });
   });
 });
 
