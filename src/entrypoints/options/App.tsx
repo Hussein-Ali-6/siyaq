@@ -77,7 +77,7 @@ export function App() {
       <section className="space-y-2 px-1 text-[12.5px] text-muted">
         <h2 className="text-[13px] font-semibold text-text">Privacy</h2>
         <p>
-          Nothing leaves the browser until you click the Siyaq button next to a selection. Each request sends the page title, the paragraph around the selection, the selection, the article summary once it exists, and the name of your translation language, to the provider you chose, using your key or your ChatGPT sign-in. Keys and sign-in tokens stay in this browser profile and are only sent to their own provider. A speaker button sends that word or sentence to Google's voice service, and the YouGlish and Oxford links send the word to those sites, only when you click them. Nothing is logged except error codes.
+          Nothing leaves the browser until you click the Siyaq button next to a selection. Each lookup sends the page title, the paragraph around the selection, the selection, the article summary once it exists, the name of your translation language and your English level to the provider you chose, using your key or your ChatGPT sign-in. Keys and sign-in tokens stay in this browser profile and are only sent to their own provider. A speaker button sends that word or sentence to Google's voice service, and the YouGlish and Oxford links send the word to those sites, only when you click them. Nothing is logged except error codes.
         </p>
       </section>
     </main>

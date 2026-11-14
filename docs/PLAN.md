@@ -14,7 +14,7 @@ Plan written 2026-10-16 before implementation. Kept up to date as the architectu
 | Numbered tokens | Sent for **both** card kinds. For sentences the selection itself is numbered, so key expressions come back with word indices | Lets us verify each key expression, highlight it, and open its dictionary card without fuzzy string matching. |
 | Selection highlight | When the card opens the native selection is dropped and replaced by a CSS Custom Highlight on the selected words; it moves to the unit's words when the answer arrives | One unambiguous highlight instead of two overlapping ones. |
 | Selection size | Translation selections capped at 400 words (card explains) | Keeps requests and translated output bounded. |
-| Cache key | sha-256 of prompt version + kind + normalised URL + paragraph + selection + selected indices | Includes which occurrence was selected, so a word repeated in one paragraph with two senses is not confused. |
+| Cache key | sha-256 of prompt version + provider and model + translation language + level + kind + normalised URL + paragraph + selection + numbered passage + selected indices | Includes which occurrence was selected, so a word repeated in one paragraph with two senses is not confused. Includes the language and the level, so changing either never reuses an answer written for another reader. |
 | Key secrecy | Key lives in `chrome.storage.local`; only the service worker and the options page touch it; the content script never calls `chrome.storage`. The worker also tries `storage.local.setAccessLevel('TRUSTED_CONTEXTS')` (Chrome 130+) which locks content scripts out of local storage entirely | Belt and braces. |
 | Logging | `log.ts` accepts an event code and numeric/boolean fields only | Page text and answers can never reach the console. |
 | Providers (2026-10-20) | Anthropic on its official SDK; OpenAI, Gemini and OpenRouter through the AI SDK (`ai` 7 with `@ai-sdk/openai`, `@ai-sdk/google`, `@openrouter/ai-sdk-provider`); ChatGPT plan through a hand-built Responses request | The Anthropic path keeps prompt caching, effort and refusal fallback. The ChatGPT route accepts only some fields (store false, stream true, no max_output_tokens), so it is not left to a library. All providers share one `LlmClient` interface, so prompts, validation, retry and cache are unchanged. |
@@ -34,7 +34,7 @@ src/entrypoints/
   content/controller.ts  selection watcher, icon, card host, highlight, article extraction
   content/style.css      Tailwind + theme, injected into the shadow root as inline text
   popup/                 toolbar popup (provider status, page summary, links)
-  options/               providers (key or ChatGPT sign-in, model, thinking), theme, cache controls (opens in a tab)
+  options/               providers (key or ChatGPT sign-in, model, thinking), reading (translation language, English level), theme, cache controls (opens in a tab)
   words/                 "My words" page (search, open source, delete, export)
 src/lib/
   types.ts               shared data types (requests, cards, saved items, summary)
@@ -90,13 +90,13 @@ scripts/eval/            live evaluation harness: 3 articles x ~30 selections, d
 content ──lookup(LookupRequest)──────────────▶ worker ──▶ cache? ──▶ model ──▶ validate (retry once) ──▶ cache
         ◀─LookupResponse {ok, card | error}──┘
 content ──getSummary(url)───────────────────▶ worker (summary cache)
-content ──summarize({url,title,site,text})──▶ worker ──▶ in-flight dedupe ──▶ model ──▶ cache per URL
+content ──summarize({url,title,site,text})──▶ worker ──▶ in-flight dedupe ──▶ model ──▶ cache per URL and language
 content ──saveItem / unsaveItem / isSaved───▶ worker (chrome.storage.local "saved")
 content ──getPrefs──────────────────────────▶ worker (theme)
 popup   ──getStatus / getSummary────────────▶ worker
 popup   ──extractArticle (to active tab)────▶ content (Readability) ──▶ popup ──summarize──▶ worker
 options ──testProvider / listModels─────────▶ worker
-options ──clearCaches───────────────────────▶ worker;  options writes keys, provider settings, ChatGPT sign-in and theme to storage directly
+options ──clearCaches───────────────────────▶ worker;  options writes keys, provider settings, ChatGPT sign-in, theme, translation language and level to storage directly
 words   ── reads/deletes/exports "saved" directly (extension page, trusted context)
 ```
 
@@ -115,6 +115,31 @@ indices to DOM ranges → highlight → card renders.
 - `language` is a language id from `src/lib/languages.ts`: `none` (English only, no translation fields), a listed code such as `ar`, or `x:<name>` for a typed language. `Prefs { theme, language, level }` holds the reader's choice; `level` is `B1`, `B2` or `C1`.
 - Storage keys: `apiKey` (Anthropic) and `apiKey:<provider>` (the others), `activeProvider`, `providerSettings` (model and thinking per provider), `chatgpt` (sign-in tokens), `chatgptLastAttempt` (last sign-in step, for error messages), `prefs` (theme, translation language, level), `saved` (array), `cache:<sha>` (LRU-trimmed to 400; a card key includes the language and level), `summary:<sha(url)>` (trimmed to 100; the key includes the language).
 
+## Install and update step (0.2.0)
+
+Versions before 0.2.0 translated into Arabic for an advanced reader and stored no language. On
+`runtime.onInstalled` the worker runs `prepareStorageWithRetry` from `storage/migrate.ts`, which looks
+at what is stored and at the version the update came from:
+
+- **New install.** Stores the browser's interface language when the list has it (`languageFromBrowser`),
+  otherwise English only, with level B2. The settings page opens once the step has finished.
+- **Update from before 0.2.0** (no language stored, and `previousVersion` below 0.2.0 or missing). Stores
+  Arabic and C1, keeps the theme, and clears the card and summary caches, whose entries have the old
+  shape. The caches go first, so a retry still clears them.
+- **Update from 0.2.0 or later with no language stored** (an earlier run of the step failed). Treated like
+  a new install; nothing is cleared. Versions are compared by their numbers, so 0.10.0 is later than 0.2.0.
+- **A language is already stored.** The settings and the caches are left alone.
+- **Saved words**, in every case: items in the old shape are rewritten once (`migrateSavedItem` renames
+  the Arabic fields to `translation`, `translationNote` and `sentenceTranslation` and sets
+  `language: 'ar'`). `saved.ts` also converts on every read, so My words is right even if the step failed.
+
+The step is safe to run twice. It is tried once more if it fails and it never rejects: after two failures
+the worker logs `prepare_storage_failed` and reads fall back to `DEFAULT_PREFS` (English only, B2). The
+handlers that read the preferences (`lookup`, `getSummary`, `summarize`, `getPrefs`) wait for the step
+first, through `storageReady` in `background.ts`. The browser language is read inside the step, and only
+when a starting language has to be chosen. `getPrefs` goes through `prefsFromStored`, which replaces a
+stored level or language that is not usable with the default.
+
 ## Prompt + validation rules
 
 Encoded verbatim from the brief in `prompts.ts` (meaning = general B1 definition, translation = usual equivalent in the reader's language,
@@ -123,6 +148,7 @@ with empty lists). API schema has no enums/min/max; `validate.ts` enforces: tran
 examples, no cap on notes (the model decides, since 2026-10-18), ≤6 combinations, ≤4 other meanings, ≤3 key expressions (trim, not reject), indices
 unique, in range and overlapping the selection (reject → retry once with the reason appended).
 The prompts are built for a reader: dictionarySystem(reader) and translationSystem(reader) take the language and level, summarySystem(language) takes the language. The worked examples show the English fields only.
+After the examples, the dictionary and sentence prompts say that the translation fields are still required, written in the reader's language with the punctuation that language uses in print; the summary prompt asks for the same punctuation. Inside a prompt a language goes by its `promptName` from `languages.ts`, which is the English name except for the four entries whose list name has brackets ("Simplified Chinese", not "Chinese (Simplified)"). The settings list keeps the list name, and so do the CSV export and the evaluation report, through `languageName`.
 
 ## Learned while building (2026-10-16)
 

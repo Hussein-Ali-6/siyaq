@@ -2,7 +2,7 @@
  * Live evaluation of the prompts on real articles.
  *
  *   pnpm eval            dry run: builds every request and prints the numbered passages
- *   pnpm eval --live     calls the model and writes scripts/eval/out/report.md
+ *   pnpm eval --live     calls the model and writes scripts/eval/out/report-ar-C1.md (see --language below)
  *   pnpm eval --live --provider openai --model gpt-6.1-mini --thinking low
  *        providers: anthropic (default), openai, google, openrouter; keys come from ANTHROPIC_API_KEY,
  *        OPENAI_API_KEY, GOOGLE_API_KEY (or GEMINI_API_KEY) and OPENROUTER_API_KEY. ChatGPT sign-in

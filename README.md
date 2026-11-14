@@ -23,22 +23,32 @@ reading the paragraph and the article, not just the word.
 - **Pronunciation.** Word cards show British and American IPA, each with a speaker button that reads the
   word in Chrome's Google voices, plus links that open the word on YouGlish (real videos) and in Oxford
   Learner's Dictionaries. Translation cards have UK and US speakers for the selected text.
-- **Translation card** (a sentence or longer): a natural translation into your language, plainer English only when
-  the original is hard, and at most three "Key expressions" that open their own dictionary card.
+- **Translation card** (a sentence or longer): a natural translation into your language, plainer
+  English only when the original is hard, and at most three "Key expressions" that open their own
+  dictionary card.
 - **Language and level.** The Reading section of the settings page sets the translation language (40
   languages, any other by typing its name, or English only) and your English level (Intermediate B1,
   Upper-intermediate B2, Advanced C1). The level changes how simply cards explain and how much they
   explain. With English only, cards drop the translations, and a sentence card always gives a plainer
-  English version instead. A new install starts with the browser's language.
+  English version instead.
+- **Install and update.** A new install starts with the browser's language when it is one of the 40,
+  otherwise with English only, and with Upper-intermediate. Versions before 0.2.0 translated into
+  Arabic for an advanced reader, so an install updated from one of them keeps Arabic and Advanced, and
+  its cached answers are cleared. Words saved before 0.2.0 are converted to the current shape and stay
+  Arabic. Lookups wait for this step to finish.
 - **Context sent with every request:** page title and site, the article summary once it exists, the
   paragraph around the selection widened to 150–400 words, and the selection as numbered word tokens
   (`[12]gave [13]up`) so the model's answer can be checked and the exact words highlighted on the page.
 - **Article summary.** The first card opened on a page starts a summary in the background
-  (Mozilla Readability, capped at 4,000 words). It is cached per URL, sent as context with later
-  requests, and shown by the book button in the card header and in the toolbar popup.
+  (Mozilla Readability, capped at 4,000 words). It is cached per URL and translation language, sent as
+  context with later requests, and shown by the book button in the card header and in the toolbar
+  popup.
 - **Saved items** live in `chrome.storage.local`. The "My words" page lists them newest first, with
-  search, a link back to the source sentence, delete, and JSON/CSV export. Each item keeps the language it was saved in.
-- **Cache.** Answers are cached by URL, paragraph and selection, so asking again costs nothing.
+  search, a link back to the source sentence, delete, and JSON/CSV export. Each item keeps the
+  language it was saved in.
+- **Cache.** Answers are cached by provider and model, translation language, English level, URL,
+  paragraph and selection, so asking again costs nothing, and changing the language or the level never
+  shows an answer written for the old setting.
 
 ## Setup
 
@@ -85,7 +95,8 @@ src/lib/text                    sentence/word segmentation, numbered passages, i
 src/lib/dom                     paragraph widening, flat text model, selection, highlight, article
 src/lib/llm                     provider clients, model lists, prompts, loose API schemas, strict validation, lookup/summary
 src/lib/auth                    Sign in with ChatGPT (OAuth with PKCE)
-src/lib/storage                 settings, provider keys, caches, saved items, migrate.ts (converting old saved words; the install and update step), URL normalisation, hashing
+src/lib/storage                 settings, provider keys, caches, saved items, URL normalisation, hashing,
+                                migrate.ts (the install and update step, converting old saved words)
 src/lib/languages.ts            the translation languages
 src/lib/speech.ts, links.ts     read-aloud, YouGlish and Oxford links
 src/ui                          theme, card components, shared pieces
@@ -111,11 +122,18 @@ ordinary words, no combinations for idioms, the unit a dictionary would list.
 
 ```bash
 pnpm eval                              # dry run: builds every request, prints the numbered passages
-pnpm eval --live                       # calls the model, writes scripts/eval/out/report.md
+pnpm eval --live                       # calls the model, writes scripts/eval/out/report-ar-C1.md
 pnpm eval --live --only guardian       # one article
 pnpm eval --live --pick crackdown,foot --no-summary   # a few cases, no summaries
 pnpm eval --live --provider openai --model gpt-6.1-mini --thinking low
+pnpm eval --live --language es --level B2              # another reader, writes report-es-B2.md
 ```
+
+`--language` takes a language id from `src/lib/languages.ts` (`none` for English only, `x:Kurdish` for
+a typed language) and `--level` takes `B1`, `B2` or `C1`. Without them the reader is `ar` and `C1`.
+The report goes to `scripts/eval/out/report-<language>-<level>.md`, so runs for different readers do
+not overwrite each other. The language id is made safe for a file name there: `zh-Hans` becomes
+`zh-hans` and `x:Kurdish` becomes `x-kurdish`.
 
 `--live` reads `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY` (or `GEMINI_API_KEY`) and
 `OPENROUTER_API_KEY` from the environment or from a `.env` file in the project root (git-ignored).
@@ -128,8 +146,9 @@ retold meanings, plain English on clear sentences). Tune `src/lib/llm/prompts.ts
 
 ## Privacy
 
-Nothing leaves the browser until you click the icon. Each request sends the page title, the paragraph
-around the selection, the selection, and the article summary (once it exists) to the provider you
-chose, with your key or your ChatGPT sign-in. Pressing a speaker sends that word or sentence to Google's voice service, and the YouGlish and
-Oxford links send the word to those sites, only when you click them. The console only ever shows event names, error codes, status codes and counts, never page
-text or answers.
+Nothing leaves the browser until you click the icon. Each lookup sends the page title, the paragraph
+around the selection, the selection, the article summary (once it exists), the name of your
+translation language and your English level to the provider you chose, with your key or your ChatGPT
+sign-in. Pressing a speaker sends that word or sentence to Google's voice service, and the YouGlish
+and Oxford links send the word to those sites, only when you click them. The console only ever shows
+event names, error codes, status codes and counts, never page text or answers.
