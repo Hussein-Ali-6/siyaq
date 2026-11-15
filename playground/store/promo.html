@@ -11,8 +11,7 @@
       .tile .row { display: flex; align-items: center; gap: 16px; }
       .tile img { width: 64px; height: 64px; border-radius: 14px; }
       .tile .name { font-size: 40px; font-weight: 700; letter-spacing: -0.6px; color: #f2b33d; }
-      .tile .tag { margin-top: 26px; font-size: 21px; line-height: 1.3; font-weight: 600; max-width: 330px; }
-      .tile .ar { margin-top: 12px; font-family: 'Geeza Pro', 'Noto Naskh Arabic', 'Al Nile', sans-serif; font-size: 19px; color: #a3a29d; direction: rtl; text-align: left; unicode-bidi: plaintext; }
+      .tile .tag { margin-top: 26px; font-size: 21px; line-height: 1.3; font-weight: 600; max-width: 368px; text-wrap: balance; }
       .icon { display: none; width: 128px; height: 128px; align-items: center; justify-content: center; }
       .icon img { width: 96px; height: 96px; }
       body.show-tile .tile { display: flex; }
@@ -22,8 +21,7 @@
   <body>
     <div class="tile">
       <div class="row"><img data-icon alt="" /><span class="name">Siyaq</span></div>
-      <div class="tag">English words and sentences, explained in Arabic, in context.</div>
-      <div class="ar">افهم الإنجليزية في سياقها</div>
+      <div class="tag">English words and sentences, explained in your language, in context.</div>
     </div>
     <div class="icon"><img data-icon alt="" /></div>
     <script type="module" src="./promo.ts"></script>

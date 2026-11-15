@@ -1,8 +1,8 @@
 /**
  * An in-memory stand-in for the extension APIs, so the real settings page can be viewed in the
  * playground. Scenario from the URL hash: #fresh (nothing set up), #chatgpt (signed in and active),
- * #chatgpt-only (signed in, no Anthropic key, nothing chosen), default
- * (Anthropic key saved and active).
+ * #chatgpt-only (signed in, no Anthropic key, nothing chosen), #store (as the default, with Spanish
+ * and Upper-intermediate chosen, for the store screenshot), default (Anthropic key saved and active).
  */
 type Listener = (...args: unknown[]) => void;
 const events = () => {
@@ -22,6 +22,7 @@ if (scenario === 'chatgpt' || scenario === 'chatgpt-only') {
 }
 store['cache:a'] = { v: {}, at: 1 };
 store['summary:b'] = { v: {}, at: 1 };
+if (scenario === 'store') store.prefs = { theme: 'dark', language: 'es', level: 'B2' };
 
 const granted = new Set<string>(['https://api.anthropic.com/*', ...(scenario.startsWith('chatgpt') ? ['https://auth.openai.com/*', 'https://api.openai.com/*'] : [])]);
 const onChanged = events();

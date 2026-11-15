@@ -34,6 +34,6 @@ shot screenshot-1-dictionary "$BASE/store/shots.html#dictionary" 1280 800
 shot screenshot-2-translation "$BASE/store/shots.html#translation" 1280 800
 shot screenshot-3-summary "$BASE/store/shots.html#summary" 1280 800
 shot screenshot-4-my-words "$BASE/store/words.html" 1280 800
-shot screenshot-5-settings "$BASE/settings.html" 1280 800
+shot screenshot-5-settings "$BASE/settings.html#store" 1280 800
 shot promo-small "$BASE/store/promo.html#tile" 440 280
 shot store-icon "$BASE/store/promo.html#icon" 128 128 transparent
