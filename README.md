@@ -26,7 +26,7 @@ reading the paragraph and the article, not just the word.
 - **Translation card** (a sentence or longer): a natural translation into your language, plainer
   English only when the original is hard, and at most three "Key expressions" that open their own
   dictionary card.
-- **Language and level.** The Reading section of the settings page sets the translation language (40
+- **Language and level.** The Language and level section of the settings page sets the translation language (40
   languages, any other by typing its name, or English only) and your English level (Intermediate B1,
   Upper-intermediate B2, Advanced C1). The level changes how simply cards explain and how much they
   explain. With English only, cards drop the translations, and a sentence card always gives a plainer
@@ -58,8 +58,9 @@ pnpm build          # -> .output/chrome-mv3
 ```
 
 Load it in Chrome: open `chrome://extensions`, enable *Developer mode*, choose *Load unpacked* and
-pick `.output/chrome-mv3`. The settings page opens on first install. Pick a provider, connect it,
-choose a model and press *Use for lookups*. Pages that were already open need a reload before the
+pick `.output/chrome-mv3`. The settings page opens on first install and shows the one step that is
+left: open a provider, paste its API key and press *Connect*. Siyaq saves the key, chooses the
+recommended model and tests the connection. Pages that were already open need a reload before the
 button appears.
 
 ## AI providers

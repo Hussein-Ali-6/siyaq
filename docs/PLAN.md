@@ -34,7 +34,7 @@ src/entrypoints/
   content/controller.ts  selection watcher, icon, card host, highlight, article extraction
   content/style.css      Tailwind + theme, injected into the shadow root as inline text
   popup/                 toolbar popup (provider status, page summary, links)
-  options/               providers (key or ChatGPT sign-in, model, thinking), reading (translation language, English level), theme, cache controls (opens in a tab)
+  options/               setup card for a new install, language and level, providers as rows (one Connect button for a key, ChatGPT sign-in, model, thinking), theme, stored answers, privacy (opens in a tab)
   words/                 "My words" page (search, open source, delete, export)
 src/lib/
   types.ts               shared data types (requests, cards, saved items, summary)

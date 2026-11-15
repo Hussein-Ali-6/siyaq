@@ -35,10 +35,11 @@ One column, 760 px wide at most, in this order:
 2. **Setup card**, shown only when it has something to say (see below).
 3. **Language and level.**
 4. **AI provider.**
-5. **Appearance.** One row: the label "Theme" and a Dark / Light switch.
+5. **Theme.** One row: the title and a Dark / Light switch.
 6. **Stored answers.** What the store of answers is, how much it holds, and a button to clear it. It says
    that clearing does not delete saved words.
-7. **Privacy.** The same facts as before, as a short list.
+7. **Privacy.** The promise in one sentence (nothing leaves the browser until you click the button).
+   The details are the same facts as before, as a list, folded under "What is sent, and where".
 
 Language comes before the provider because it is already filled in from the browser's language, so the
 first thing a new reader sees is their own language, chosen for them. The setup card points to the
@@ -50,9 +51,9 @@ A pure function, `setupState(views, active)`, decides what the card shows:
 
 | State | When | Card |
 |---|---|---|
-| `welcome` | No provider has a key or a sign-in | "Welcome to Siyaq": three steps. 1 Language and level, already done, showing the current choice. 2 Connect an AI provider, with a button that scrolls to that section. 3 Try it on a page. |
-| `problem` | Something is saved, but lookups cannot work | "Lookups are not working", the reason in one sentence, and a button that opens that provider's row. |
-| `ready` | The provider in use is ready | No card. If the page was not ready when it opened and became ready during this visit, a "You're ready" card explains how to use Siyaq, with a "Got it" button. |
+| `welcome` | No provider has a key or a sign-in | "Welcome to Siyaq": three steps. 1 Language and level, already done, showing the current choice. 2 Connect an AI provider, with a button that scrolls to that section and puts the cursor in the key field. 3 Try it on a page. |
+| `problem` | Something is saved, but lookups cannot work | "Lookups are not working", the reason in one sentence, and a "Fix it" button that opens that provider's row. |
+| `ready` | The provider in use is ready | No card. If the page opened in the `welcome` state and a provider was connected during this visit, the same three steps stay, titled "You're ready": step 2 is done, step 3 says how to use Siyaq and has a "Got it" button. The page scrolls back to the card so the reader sees it. |
 
 The reasons for `problem` are: no model chosen, permission to reach the provider missing, and ChatGPT
 signed in without plan usage.
@@ -102,13 +103,17 @@ in use, so a new reader sees the key field at once.
 5. If the provider in use is not ready, lookups switch to this one. Otherwise the row shows a
    "Use for lookups" button.
 
-If the provider rejects the key (`bad_key`), the key that was stored before is put back, and the row
-says the key was not accepted. For any other failure, such as no network, the key stays saved and the
-row says the test did not pass and why. To tell the two apart, `testProvider` and `listModels` answers
-gain an optional `code` field with the error code.
+If the provider says the key itself is wrong (status 401), the key that was stored before is put back,
+and the row says the key was not saved. For any other failure, such as no network or a key that is
+refused one model (403), the key stays saved and the row says the test did not pass and why. To tell the
+two apart, `testProvider` and `listModels` answers gain an optional `keyRejected` flag, set from a new
+`LlmError.keyRejected`.
 
 Steps 2 to 4 are one function, `connectWithKey`, with its storage and messaging passed in, so it is
 tested without a browser.
+
+A key is stored before it is tested. While Connect runs, the page keeps showing the providers as they
+were, so a key that ends up rejected never appears as connected and lookups never switch to it.
 
 **A connected row** shows:
 
@@ -119,8 +124,8 @@ tested without a browser.
 - "Use for lookups" when the row is ready and not in use.
 - "Advanced", folded: the thinking level and "Test connection".
 
-**ChatGPT** keeps its sign-in flow and its texts. After a successful sign-in the recommended model is
-chosen in the same way as for a key.
+**ChatGPT** keeps its sign-in flow and its texts. After a successful sign-in the model list opens by
+itself, because no model is chosen, and chooses the recommended one, as before.
 
 **A row that needs permission** shows an "Allow access" button, which the old page did not have.
 
@@ -157,11 +162,13 @@ shown in the row.
 | `src/entrypoints/options/ModelPicker.tsx` | Shown on "Change"; holds Refresh list and the model ID box |
 | `src/entrypoints/options/ReadingSection.tsx` | Level cards |
 | `src/entrypoints/options/saved-message.tsx` (new) | The shared "Saved" message |
+| `src/entrypoints/options/controls.tsx` (new) | Section, the side-by-side choice, the result box |
+| `src/entrypoints/options/usePrefs.ts` (new) | The stored preferences, kept in sync |
 | `src/entrypoints/options/useProviders.ts` | `statusLabel` moves to `status.ts` as `rowStatus` |
-| `src/lib/messaging.ts`, `src/entrypoints/background.ts` | Optional `code` on the two answers |
-| `src/lib/llm/providers.ts` | Anthropic's line |
+| `src/lib/llm/types.ts`, `src/lib/messaging.ts`, `src/entrypoints/background.ts` | `keyRejected` on the error and on the two answers |
+| `src/lib/llm/providers.ts`, `src/lib/llm/resolve.ts` | Anthropic's line; the missing-permission message points to "allow access" |
 | `src/ui/pages.css` | Keyboard outline |
-| `playground/settings-stub.ts` | Scenarios for a rejected key and for missing permission |
+| `playground/settings-stub.ts` | Scenarios for a rejected key, two providers and missing permission |
 
 ## Not in this change
 
@@ -172,7 +179,10 @@ shown in the row.
 
 ## Checks
 
-- Unit tests for `status.ts` and `connect.ts`.
-- The page viewed in the playground: new install, set up, a rejected key, missing permission, ChatGPT,
-  dark and light, wide and narrow.
+- Unit tests for `status.ts`, `connect.ts`, `LlmError.keyRejected` and the setup card.
+- The page viewed in the playground: new install, set up, a rejected key, two providers, missing
+  permission, ChatGPT, dark and light, wide and narrow, and with the keyboard.
 - Store screenshot 5 recaptured.
+
+Not checked: the page inside Chrome as a loaded extension, where the permission request and the real
+providers come into play. The playground stands in for both.

@@ -95,7 +95,7 @@ export async function resolveClient(provider: ProviderId): Promise<ResolvedClien
   }
   if (!settings.model) return { error: { code: 'no_key', message: `Choose a ${info.name} model in Siyaq settings.` } };
   if (!(await hasProviderPermission(provider))) {
-    return { error: { code: 'no_key', message: `Siyaq needs permission to reach ${info.name}. Open settings and save the provider again.` } };
+    return { error: { code: 'no_key', message: `Siyaq needs permission to reach ${info.name}. Open settings and allow access.` } };
   }
 
   const cacheKey = [provider, settings.model, settings.thinking, credential].join('\u0001');
