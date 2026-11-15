@@ -33,7 +33,7 @@ bash scripts/store/capture.sh   # writes store/images (needs Google Chrome)
 ```
 
 The Arabic card text is written by hand. The Spanish and Chinese text is the model's own, saved in
-`playground/store/live/` as it came back. To refresh it (six model calls, billed to the key in `.env`):
+`playground/store/live/` as the lookup code returned it. To refresh it (six model calls, billed to the key in `.env`):
 
 ```bash
 pnpm eval --live --only store --language es --level B2 --pick turned,meticulous --no-summary

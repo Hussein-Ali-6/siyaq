@@ -3,8 +3,8 @@
  * the pictures match what the extension would show there.
  *
  * The Spanish and Chinese text is not written by hand. It comes from the files in ./live, which hold
- * answers exactly as the model returned them at level B2. To refresh them, see store/README.md. The
- * Arabic text is written by hand.
+ * the model's answers at level B2 as the lookup code returns them, so the Chinese has full-width
+ * punctuation. To refresh them, see store/README.md. The Arabic text is written by hand.
  */
 import type { DictionaryCard, SavedItem, Segment, Summary, TranslationCard } from '@/lib/types';
 import esLive from './live/es-B2.json';
