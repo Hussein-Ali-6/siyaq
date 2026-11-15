@@ -2,7 +2,12 @@
  * An in-memory stand-in for the extension APIs, so the real settings page can be viewed in the
  * playground. Scenario from the URL hash: #fresh (nothing set up), #chatgpt (signed in and active),
  * #chatgpt-only (signed in, no Anthropic key, nothing chosen), #store (as the default, with Spanish
- * and Upper-intermediate chosen, for the store screenshot), default (Anthropic key saved and active).
+ * and Upper-intermediate chosen, for the store screenshot), #two (Anthropic in use, OpenAI connected
+ * as well), #needs-permission (an OpenAI key saved and in use, without Chrome's permission to reach
+ * OpenAI), default (Anthropic key saved and active).
+ *
+ * A key that contains "bad" is rejected when it is tested, and one that contains "offline" fails as
+ * if there were no network.
  */
 type Listener = (...args: unknown[]) => void;
 const events = () => {
@@ -12,8 +17,17 @@ const events = () => {
 
 const scenario = location.hash.slice(1);
 const store: Record<string, unknown> = {};
-if (scenario !== 'fresh' && scenario !== 'chatgpt-only') {
+if (scenario !== 'fresh' && scenario !== 'chatgpt-only' && scenario !== 'needs-permission') {
   store.apiKey = 'sk-ant-playground';
+}
+if (scenario === 'two') {
+  store['apiKey:openai'] = 'sk-openai-playground';
+  store.providerSettings = { openai: { model: 'gpt-6.1-mini', thinking: 'medium' } };
+}
+if (scenario === 'needs-permission') {
+  store['apiKey:openai'] = 'sk-openai-playground';
+  store.activeProvider = 'openai';
+  store.providerSettings = { openai: { model: 'gpt-6.1-mini', thinking: 'medium' } };
 }
 if (scenario === 'chatgpt' || scenario === 'chatgpt-only') {
   if (scenario === 'chatgpt') store.activeProvider = 'chatgpt';
@@ -24,7 +38,7 @@ store['cache:a'] = { v: {}, at: 1 };
 store['summary:b'] = { v: {}, at: 1 };
 if (scenario === 'store') store.prefs = { theme: 'dark', language: 'es', level: 'B2' };
 
-const granted = new Set<string>(['https://api.anthropic.com/*', ...(scenario.startsWith('chatgpt') ? ['https://auth.openai.com/*', 'https://api.openai.com/*'] : [])]);
+const granted = new Set<string>(['https://api.anthropic.com/*', ...(scenario.startsWith('chatgpt') ? ['https://auth.openai.com/*', 'https://api.openai.com/*'] : []), ...(scenario === 'two' ? ['https://api.openai.com/*'] : [])]);
 const onChanged = events();
 const onAdded = events();
 
@@ -48,8 +62,12 @@ function handle(type: string, data: unknown): unknown {
   switch (type) {
     case 'listModels':
       return { ok: true, models: models[data as string] ?? [], recommended: recommended[data as string] ?? null };
-    case 'testProvider':
+    case 'testProvider': {
+      const key = String(store[data === 'anthropic' ? 'apiKey' : `apiKey:${data as string}`] ?? '');
+      if (key.includes('bad')) return { ok: false, message: 'The API key was rejected.', keyRejected: true };
+      if (key.includes('offline')) return { ok: false, message: 'Could not reach the provider. Check your connection.' };
       return { ok: true, message: 'Test passed in the playground.' };
+    }
     case 'clearCaches':
       return { removed: 2 };
     case 'getStatus':

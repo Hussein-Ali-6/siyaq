@@ -3,20 +3,8 @@ import { browser } from 'wxt/browser';
 import { hasPlanUsage } from '@/lib/auth/chatgpt-oauth';
 import { PROVIDERS } from '@/lib/llm/providers';
 import type { ProviderId } from '@/lib/llm/types';
-import { getActiveProvider, getChatGptAuth, getProviderKey, getProviderSettings, type ProviderSettings } from '@/lib/storage/settings';
-
-export interface ProviderView {
-  id: ProviderId;
-  /** An API key is saved, or the reader is signed in to ChatGPT. */
-  hasCredential: boolean;
-  /** The optional host permission for this provider is granted. */
-  permitted: boolean;
-  settings: ProviderSettings;
-  email?: string;
-  planUsage?: boolean;
-  /** Everything needed for lookups is in place. */
-  ready: boolean;
-}
+import { getActiveProvider, getChatGptAuth, getProviderKey, getProviderSettings } from '@/lib/storage/settings';
+import type { ProviderView, ProviderViews } from './status';
 
 async function loadView(id: ProviderId): Promise<ProviderView> {
   const info = PROVIDERS.find((p) => p.id === id)!;
@@ -34,13 +22,14 @@ async function loadView(id: ProviderId): Promise<ProviderView> {
 
 /** Status of every provider plus the active one, kept in sync with storage. */
 export function useProviders() {
-  const [views, setViews] = useState<Record<ProviderId, ProviderView> | null>(null);
+  const [views, setViews] = useState<ProviderViews | null>(null);
   const [active, setActive] = useState<ProviderId>('anthropic');
 
   const reload = useCallback(async () => {
-    const list = await Promise.all(PROVIDERS.map((p) => loadView(p.id)));
-    setViews(Object.fromEntries(list.map((v) => [v.id, v])) as Record<ProviderId, ProviderView>);
-    setActive(await getActiveProvider());
+    // Both are read before either is set, so no render ever pairs new views with the old active provider.
+    const [list, current] = await Promise.all([Promise.all(PROVIDERS.map((p) => loadView(p.id))), getActiveProvider()]);
+    setViews(Object.fromEntries(list.map((v) => [v.id, v])) as ProviderViews);
+    setActive(current);
   }, []);
 
   useEffect(() => {
@@ -59,13 +48,4 @@ export function useProviders() {
   }, [reload]);
 
   return { views, active, reload };
-}
-
-export function statusLabel(view: ProviderView, isActive: boolean): { text: string; tone: 'active' | 'ready' | 'pending' | 'off' } {
-  if (isActive && view.ready) return { text: 'Active', tone: 'active' };
-  if (view.ready) return { text: 'Ready', tone: 'ready' };
-  if (view.hasCredential && view.id === 'chatgpt' && !view.planUsage) return { text: 'Plan usage off', tone: 'pending' };
-  if (view.hasCredential && !view.settings.model) return { text: 'Choose a model', tone: 'pending' };
-  if (view.hasCredential && !view.permitted) return { text: 'Needs permission', tone: 'pending' };
-  return { text: isActive ? 'Active, not set up' : 'Not set up', tone: isActive ? 'pending' : 'off' };
 }

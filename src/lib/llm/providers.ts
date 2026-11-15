@@ -17,7 +17,7 @@ export const PROVIDERS: ProviderInfo[] = [
   {
     id: 'anthropic',
     name: 'Anthropic',
-    tagline: 'Claude models. The prompts were tuned on Claude Sonnet 5.5.',
+    tagline: 'Claude models. Siyaq was tuned on Claude Sonnet 5.5.',
     auth: 'key',
     origins: ['https://api.anthropic.com/*'],
     keyUrl: 'https://console.anthropic.com/settings/keys',

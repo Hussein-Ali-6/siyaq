@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { languageForOtherText, listChoice, optionLabel } from './ReadingSection';
+import { languageForOtherText, levelLabel, listChoice, optionLabel } from './ReadingSection';
 
 describe('listChoice', () => {
   it('selects the matching entry for English only and for listed languages', () => {
@@ -42,5 +42,13 @@ describe('optionLabel', () => {
 
   it('shows the name once when both are the same', () => {
     expect(optionLabel({ nativeName: 'Filipino', englishName: 'Filipino' })).toBe('Filipino');
+  });
+});
+
+describe('levelLabel', () => {
+  it('gives the name and the code of a level', () => {
+    expect(levelLabel('B1')).toBe('Intermediate (B1)');
+    expect(levelLabel('B2')).toBe('Upper-intermediate (B2)');
+    expect(levelLabel('C1')).toBe('Advanced (C1)');
   });
 });
