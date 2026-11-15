@@ -14,6 +14,8 @@ export interface SummarizeRequest {
 export interface KeyTestResult {
   ok: boolean;
   message: string;
+  /** True when the provider said the key itself is wrong (status 401), so it is not worth keeping. */
+  keyRejected?: boolean;
 }
 
 export interface ProviderStatus {
@@ -25,7 +27,7 @@ export interface ProviderStatus {
   problem?: string;
 }
 
-export type ModelListResult = { ok: true; models: ModelOption[]; recommended: string | null } | { ok: false; message: string };
+export type ModelListResult = { ok: true; models: ModelOption[]; recommended: string | null } | { ok: false; message: string; keyRejected?: boolean };
 
 /**
  * Every message in the extension. Content script, popup and options page send; the service

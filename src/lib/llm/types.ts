@@ -20,6 +20,14 @@ export class LlmError extends Error {
   get retryable(): boolean {
     return this.code === 'rate_limited' || this.code === 'overloaded' || this.code === 'timeout' || this.code === 'network';
   }
+
+  /**
+   * The provider said the key itself is wrong. A 403 is not that: the key is valid and is refused
+   * something, such as a model.
+   */
+  get keyRejected(): boolean {
+    return this.code === 'bad_key' && this.status === 401;
+  }
 }
 
 export interface StructuredCall {

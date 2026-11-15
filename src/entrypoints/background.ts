@@ -98,7 +98,7 @@ export default defineBackground(() => {
     } catch (err) {
       const e = err instanceof LlmError ? err : new LlmError('unknown', 'Unexpected error.');
       log.warn('provider_test_failed', { code: e.code, status: e.status ?? 0, kind: provider });
-      return { ok: false, message: e.message };
+      return { ok: false, message: e.message, ...(e.keyRejected ? { keyRejected: true } : {}) };
     }
   });
 
@@ -109,7 +109,7 @@ export default defineBackground(() => {
     } catch (err) {
       const e = err instanceof LlmError ? err : new LlmError('unknown', 'Could not load the model list.');
       log.warn('list_models_failed', { code: e.code, status: e.status ?? 0, kind: provider });
-      return { ok: false, message: e.message };
+      return { ok: false, message: e.message, ...(e.keyRejected ? { keyRejected: true } : {}) };
     }
   });
 
