@@ -6,7 +6,7 @@ Parts marked **(ChatGPT)** apply only if the store version keeps Sign in with Ch
 ## Single purpose
 
 ```
-Siyaq explains English text on web pages in Arabic. The reader selects a word or a sentence on a page, clicks Siyaq's button, and gets a dictionary card or a translation written for that context by the AI provider the reader connected.
+Siyaq explains English text on web pages to people who are learning English. The reader selects a word or a sentence on a page, clicks Siyaq's button, and gets a dictionary card or a translation into the language they chose, written for that context by the AI provider the reader connected.
 ```
 
 ## Permission justifications
@@ -14,7 +14,7 @@ Siyaq explains English text on web pages in Arabic. The reader selects a word or
 ### storage
 
 ```
-Stores the reader's settings, their own AI provider API keys or sign-in tokens, the words they save, and cached answers and article summaries, so a repeated question does not call the AI provider again. Everything is kept in chrome.storage.local on the reader's device and is never synced.
+Stores the reader's settings, including their translation language and English level, their own AI provider API keys or sign-in tokens, the words they save, and cached answers and article summaries, so a repeated question does not call the AI provider again. Everything is kept in chrome.storage.local on the reader's device and is never synced.
 ```
 
 ### activeTab
@@ -64,7 +64,7 @@ Tick these data types:
 | Location | no | |
 | Web history | no | The page address is used only on the device, as a cache key and as a link back from a saved word. It is not sent to the AI provider. |
 | User activity | no | |
-| Website content | **yes** | When the reader clicks the button: the selection, the paragraph around it, the page title, the site name, and up to 4,000 words of article text for the summary go to the provider the reader chose. |
+| Website content | **yes** | When the reader clicks the button: the selection, the paragraph around it, the page title, the site name, and up to 4,000 words of article text for the summary go to the provider the reader chose. The name of the reader's translation language and their English level go with each request. Those two are settings, not website content. |
 
 Then tick all three certifications:
 

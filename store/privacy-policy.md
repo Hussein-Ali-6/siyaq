@@ -1,16 +1,18 @@
 # Siyaq privacy policy
 
-Effective 13 November 2026.
+Effective 15 November 2026.
 
-Siyaq is a Chrome extension that explains English text on web pages in Arabic. It has no server and no
-account. Its developer does not receive, see or store any of your data.
+Siyaq is a Chrome extension that explains English text on web pages, with a translation into the
+language you choose. It has no server and no account. Its developer does not receive, see or store any
+of your data.
 
 ## What stays on your device
 
 These are kept in Chrome's local extension storage on your computer. They are not synced to other
 devices and are not sent to the developer.
 
-- Your settings: the AI provider you chose, its model and thinking level, and the theme.
+- Your settings: your translation language, your English level, the AI provider you chose, its model
+  and thinking level, and the theme.
 - Your API keys, and, if you use Sign in with ChatGPT, your sign-in tokens and the email address of the
   ChatGPT account, which is shown on the settings page.
 - The words and sentences you save, with the sentence, page title and page address they came from.
@@ -24,11 +26,12 @@ through Sign in with ChatGPT), using your own API key or sign-in:
 
 - the text you selected, and the paragraph around it (up to about 400 words);
 - the page title and the site name;
-- the article summary, once one exists.
+- the article summary, once one exists;
+- the name of your translation language, as listed or as you typed it, and your English level.
 
 The first card you open on a page also asks the same provider for a short summary of the article. For
-that, Siyaq sends the article's main text (up to 4,000 words), the page title and the site name. The
-same happens when you ask for a summary from the toolbar button.
+that, Siyaq sends the article's main text (up to 4,000 words), the page title, the site name and the
+name of your translation language. The same happens when you ask for a summary from the toolbar button.
 
 Siyaq does not send the page address, your browsing history, other tabs, or anything from input fields.
 
