@@ -24,10 +24,24 @@ Everything needed to publish Siyaq on the Chrome Web Store, ready to paste or up
 
 ## Images
 
-The screenshots use the real card, My words page and settings page with hand-written fixtures and an
-original article, so they need no API key. Sources are in `playground/store/`.
+The screenshots use the real card, My words page and settings page with fixed answers and an original
+article, so capturing them needs no API key. Sources are in `playground/store/`.
 
 ```bash
 pnpm playground                 # keep it running
 bash scripts/store/capture.sh   # writes store/images (needs Google Chrome)
 ```
+
+The Arabic card text is written by hand. The Spanish and Chinese text is the model's own, saved in
+`playground/store/live/` as it came back. To refresh it (six model calls, billed to the key in `.env`):
+
+```bash
+pnpm eval --live --only store --language es --level B2 --pick turned,meticulous --no-summary
+pnpm eval --live --only store --language zh-Hans --level B2 --pick 'turned,elephant,a family bakery'
+cp scripts/eval/out/cards-es-B2.json playground/store/live/es-B2.json
+cp scripts/eval/out/cards-zh-hans-B2.json playground/store/live/zh-Hans-B2.json
+```
+
+Read the new answers before capturing. The summary in screenshot 3 is shorter than a real one, so that
+its Chinese translation fits in the card: the English is fixed in `playground/store/fixtures.ts`, and
+the Chinese is the model's translation of that paragraph.
