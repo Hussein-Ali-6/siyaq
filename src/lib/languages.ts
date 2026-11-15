@@ -17,6 +17,8 @@ export interface Language {
   script?: string;
   /** The written standard to ask the model for. */
   variety?: string;
+  /** Its print uses full-width punctuation, such as "，" for ",". Translations are converted to it. */
+  fullWidthPunctuation?: true;
 }
 
 export const NO_TRANSLATION = 'none';
@@ -28,8 +30,8 @@ export const LANGUAGES: readonly Language[] = [
   { id: 'ar', nativeName: 'العربية', englishName: 'Arabic', dir: 'rtl', script: 'Arabic', variety: 'Modern Standard Arabic' },
   { id: 'bn', nativeName: 'বাংলা', englishName: 'Bengali', dir: 'ltr', script: 'Bengali' },
   { id: 'bg', nativeName: 'Български', englishName: 'Bulgarian', dir: 'ltr', script: 'Cyrillic' },
-  { id: 'zh-Hans', nativeName: '简体中文', englishName: 'Chinese (Simplified)', promptName: 'Simplified Chinese', dir: 'ltr', script: 'Han' },
-  { id: 'zh-Hant', nativeName: '繁體中文', englishName: 'Chinese (Traditional)', promptName: 'Traditional Chinese', dir: 'ltr', script: 'Han' },
+  { id: 'zh-Hans', nativeName: '简体中文', englishName: 'Chinese (Simplified)', promptName: 'Simplified Chinese', dir: 'ltr', script: 'Han', fullWidthPunctuation: true },
+  { id: 'zh-Hant', nativeName: '繁體中文', englishName: 'Chinese (Traditional)', promptName: 'Traditional Chinese', dir: 'ltr', script: 'Han', fullWidthPunctuation: true },
   { id: 'cs', nativeName: 'Čeština', englishName: 'Czech', dir: 'ltr' },
   { id: 'da', nativeName: 'Dansk', englishName: 'Danish', dir: 'ltr' },
   { id: 'nl', nativeName: 'Nederlands', englishName: 'Dutch', dir: 'ltr' },
@@ -79,6 +81,7 @@ export interface ResolvedLanguage {
   lang?: string;
   script?: string;
   variety?: string;
+  fullWidthPunctuation?: true;
 }
 
 const byId = new Map(LANGUAGES.map((l) => [l.id.toLowerCase(), l]));
@@ -118,6 +121,7 @@ export function resolveLanguage(id: string): ResolvedLanguage {
       lang: listed.id,
       ...(listed.script ? { script: listed.script } : {}),
       ...(listed.variety ? { variety: listed.variety } : {}),
+      ...(listed.fullWidthPunctuation ? { fullWidthPunctuation: true as const } : {}),
     };
   }
   const name = otherLanguageName(id) || id;

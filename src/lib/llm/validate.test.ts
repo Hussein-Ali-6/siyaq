@@ -272,3 +272,57 @@ describe('English only', () => {
     });
   });
 });
+
+describe('Chinese punctuation', () => {
+  const chinese = {
+    ...good,
+    translation: '拒绝;回绝',
+    sentenceTranslation: '会面后,他们拒绝了这个提议。',
+    otherMeanings: [{ meaning: 'To reduce the volume or power of something.', translation: '调低(音量、温度等)' }],
+  };
+
+  it('gives every translation field of a Chinese word card full-width punctuation', () => {
+    for (const language of ['zh-Hans', 'zh-Hant']) {
+      const r = validateDictionary(chinese, passage, [3], language);
+      expect(r.ok).toBe(true);
+      if (!r.ok) continue;
+      expect(r.card.translation).toBe('拒绝；回绝');
+      expect(r.card.sentenceTranslation).toBe('会面后，他们拒绝了这个提议。');
+      expect(r.card.otherMeanings).toEqual([{ meaning: 'To reduce the volume or power of something.', translation: '调低（音量、温度等）' }]);
+    }
+  });
+
+  it('does the same for a Chinese sentence card and its key expressions', () => {
+    const r = validateTranslation(
+      {
+        translation: '交易在最后一刻告吹了,没有人感到意外。',
+        plainEnglish: 'The deal failed, and nobody was surprised.',
+        keyExpressions: [{ expression: 'fell through', indices: [3, 4], meaning: 'To fail to happen.', translation: '告吹;落空' }],
+      },
+      tPassage,
+      'zh-Hans',
+    );
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.card.translation).toBe('交易在最后一刻告吹了，没有人感到意外。');
+    expect(r.card.keyExpressions[0]?.translation).toBe('告吹；落空');
+    expect(r.card.plainEnglish).toBe('The deal failed, and nobody was surprised.');
+  });
+
+  it('does the same for a Chinese summary, and leaves its English alone', () => {
+    const r = validateSummary({ english: 'A bakery, a chain (and an offer).', translation: '一家面包店,一家连锁企业(和一份提议)。' }, 'zh-Hans');
+    expect(r).toEqual({
+      ok: true,
+      card: { language: 'zh-Hans', english: 'A bakery, a chain (and an offer).', translation: '一家面包店，一家连锁企业（和一份提议）。' },
+    });
+  });
+
+  it('leaves the punctuation of other languages as the model wrote it', () => {
+    const japanese = validateSummary({ english: 'A summary.', translation: '要約です,たぶん。' }, 'ja');
+    expect(japanese.ok && japanese.card.translation).toBe('要約です,たぶん。');
+    const spanish = validateSummary({ english: 'A summary.', translation: 'Un resumen, quizá (hoy).' }, 'es');
+    expect(spanish.ok && spanish.card.translation).toBe('Un resumen, quizá (hoy).');
+    const typed = validateSummary({ english: 'A summary.', translation: '摘要,也许。' }, 'x:Cantonese');
+    expect(typed.ok && typed.card.translation).toBe('摘要,也许。');
+  });
+});

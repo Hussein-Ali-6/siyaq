@@ -34,6 +34,14 @@ describe('LANGUAGES', () => {
   it('marks the right-to-left languages', () => {
     expect(LANGUAGES.filter((l) => l.dir === 'rtl').map((l) => l.id)).toEqual(['ar', 'he', 'fa', 'ur']);
   });
+
+  it('marks only the two kinds of Chinese as using full-width punctuation', () => {
+    expect(LANGUAGES.filter((l) => l.fullWidthPunctuation).map((l) => l.id)).toEqual(['zh-Hans', 'zh-Hant']);
+    expect(resolveLanguage('zh-Hans').fullWidthPunctuation).toBe(true);
+    expect(resolveLanguage('zh-Hant').fullWidthPunctuation).toBe(true);
+    expect(resolveLanguage('ja').fullWidthPunctuation).toBeUndefined();
+    expect(resolveLanguage('x:Chinese').fullWidthPunctuation).toBeUndefined();
+  });
 });
 
 describe('resolveLanguage', () => {

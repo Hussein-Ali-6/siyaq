@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { NO_TRANSLATION, hasScript, resolveLanguage, type ResolvedLanguage } from '@/lib/languages';
+import { toFullWidthPunctuation } from '@/lib/text/punctuation';
 import { validateIndices } from '@/lib/text/tokens';
 import type { DictionaryCard, KeyExpression, OtherMeaning, Passage, Summary, TranslationCard } from '@/lib/types';
 
@@ -70,14 +71,15 @@ function translationLanguage(language: string): ResolvedLanguage | null {
 
 /**
  * One translation field: not empty, and when the language has its own script, containing at least
- * one character of it, which catches an answer left in English.
+ * one character of it, which catches an answer left in English. Chinese gets its full-width
+ * punctuation here, because asking for it in the prompt was not enough.
  */
 function translationText(raw: unknown, field: string, lang: ResolvedLanguage): Text {
   const value = (raw as Record<string, unknown> | null)?.[field];
   const text = typeof value === 'string' ? value.trim() : '';
   if (!text) return { ok: false, reason: `${field}: is required, in ${lang.promptName}` };
   if (lang.script && !hasScript(text, lang.script)) return { ok: false, reason: `${field}: must be written in ${lang.promptName}` };
-  return { ok: true, text };
+  return { ok: true, text: lang.fullWidthPunctuation ? toFullWidthPunctuation(text) : text };
 }
 
 /** Other meanings whose English and translation are both usable; the rest are dropped. */
