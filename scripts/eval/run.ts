@@ -13,7 +13,9 @@
  *        ("none" for English only, "x:Kurdish" for a typed language) and B1, B2 or C1.
  *        Defaults: ar and C1. The report goes to scripts/eval/out/report-<language>-<level>.md.
  *
- * Pages are fetched once and cached under scripts/eval/.cache/.
+ * Pages are fetched once and cached under scripts/eval/.cache/. An article with a "file" in cases.json
+ * is read from this repository instead (the store articles: pnpm eval --only store). A live run also
+ * writes the raw answers to scripts/eval/out/cards-<language>-<level>.json.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { JSDOM } from 'jsdom';
@@ -49,7 +51,16 @@ interface Selection {
 interface Article {
   id: string;
   url: string;
+  /** A page in this repository, read instead of fetching `url`. A path from the project root. */
+  file?: string;
+  /** False for a page that is not an article, so no summary is asked for. */
+  summary?: boolean;
   selections: Selection[];
+}
+/** The answers of one article exactly as the model returned them, for copying into fixtures. */
+interface RawArticle {
+  summary: Summary | null;
+  cards: Record<string, Card>;
 }
 
 const here = new URL('.', import.meta.url);
@@ -77,6 +88,7 @@ mkdirSync(cacheDir, { recursive: true });
 mkdirSync(outDir, { recursive: true });
 
 async function fetchHtml(article: Article): Promise<string> {
+  if (article.file) return readFileSync(new URL(`../../${article.file}`, here), 'utf8');
   const file = new URL(`${article.id}.html`, cacheDir);
   if (existsSync(file)) return readFileSync(file, 'utf8');
   const res = await fetch(article.url, { headers: { 'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/130.0 Safari/537.36' } });
@@ -211,6 +223,7 @@ async function main() {
   const report: string[] = [`# Siyaq evaluation ${new Date().toISOString().slice(0, 10)} · ${readerLabel}${live ? '' : ' (dry run)'}`, ''];
   let total = 0;
   let flagged = 0;
+  const raw: Record<string, RawArticle> = {};
 
   for (const article of cases.articles) {
     if (only && !article.id.includes(only)) continue;
@@ -223,9 +236,11 @@ async function main() {
     const page = { url: article.url, title: extracted.title, siteName: extracted.siteName };
     console.log(`\n=== ${article.id}: ${page.title} (${page.siteName}, ${countWords(extracted.text)} words extracted)`);
     report.push(`## ${article.id}`, '', `${page.title} — ${article.url}`, '');
+    const rawArticle: RawArticle = { summary: null, cards: {} };
+    raw[article.id] = rawArticle;
 
     let summary: Summary | null = null;
-    if (client && withSummary) {
+    if (client && withSummary && article.summary !== false) {
       const res = await performSummary({ url: article.url, title: page.title, siteName: page.siteName, text: extracted.text }, {
         client,
         language: reader.language,
@@ -233,6 +248,7 @@ async function main() {
       });
       if (res.ok) {
         summary = res.summary;
+        rawArticle.summary = res.summary;
         const n = words(res.summary.english);
         const ok = n >= 90 && n <= 160;
         if (!ok) flagged++;
@@ -271,6 +287,7 @@ async function main() {
         flagged++;
         continue;
       }
+      rawArticle.cards[sel.text] = res.card;
       const problems = flags(sel, res.card);
       if (problems.length) flagged++;
       console.log(`      ${problems.length ? '⚠ ' + problems.join('; ') : '✓'}`);
@@ -290,6 +307,11 @@ async function main() {
   const file = new URL(`report-${slug}-${reader.level}.md`, outDir);
   writeFileSync(file, report.join('\n'));
   console.log(`\n${total} cases, ${flagged} flagged. Report: ${file.pathname}`);
+  if (live) {
+    const rawFile = new URL(`cards-${slug}-${reader.level}.json`, outDir);
+    writeFileSync(rawFile, JSON.stringify(raw, null, 2));
+    console.log(`Raw answers: ${rawFile.pathname}`);
+  }
 }
 
 await main();

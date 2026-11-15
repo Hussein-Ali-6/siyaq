@@ -247,6 +247,46 @@
           "why": "long but clear sentence: no plain English expected"
         }
       ]
+    },
+    {
+      "id": "store-bakery",
+      "url": "https://northbridge-review.example/business/marlows-bakery",
+      "file": "playground/store/shots.html",
+      "selections": [
+        {
+          "text": "turned",
+          "context": "turned the offer down",
+          "kind": "word",
+          "expect": {
+            "unit": "turn down"
+          },
+          "why": "store screenshot 1: phrasal verb, split"
+        }
+      ]
+    },
+    {
+      "id": "store-sources",
+      "url": "https://field-notes.example/notes",
+      "file": "scripts/store/sources.html",
+      "summary": false,
+      "selections": [
+        {
+          "text": "elephant",
+          "context": "the elephant in the room",
+          "kind": "word",
+          "why": "store screenshot 4: idiom"
+        },
+        {
+          "text": "meticulous",
+          "kind": "word",
+          "why": "store screenshot 4: ordinary adjective"
+        },
+        {
+          "text": "A family bakery has refused a generous offer from a national chain that wanted to buy it. Its owner, Ruth Marlow, said no because the chain planned to use cheaper ingredients, and she would rather keep the bakery small than lose the trust it has built over four decades. Customers and other shop owners on the street welcomed the decision.",
+          "kind": "sentence",
+          "why": "store screenshot 3: the short summary, translated as a paragraph"
+        }
+      ]
     }
   ]
 }
