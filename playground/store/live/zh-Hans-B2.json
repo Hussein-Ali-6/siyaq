@@ -1,0 +1,124 @@
+{
+  "store-bakery": {
+    "summary": {
+      "language": "zh-Hans",
+      "english": "Ruth Marlow, who runs the family bakery Marlow's on Fenn Street, has turned down an offer from a national chain to buy the business. Most people in town thought the deal was already done. The bakery has opened at six every morning for forty-one years and survived two recessions and a flood. Its sourdough still sells out before nine.\n\nMarlow said the chain wanted to use cheaper ingredients, and she did not want to lose decades of goodwill for fast money. She said the family would rather stay small and keep their name. Other shop owners called her choice brave. The chain, which has bought eleven independent bakeries in three years, said it is still interested in the area. For now, customers still queue outside the shop from a quarter to six.",
+      "translation": "经营家族面包店“Marlow's”(位于芬街)的露丝·马洛拒绝了一家全国连锁企业的收购提议。镇上大多数人原本以为这笔交易已经谈成。这家面包店四十一年来每天早上六点开门,经历过两次经济衰退和一场洪水,它的酸面包至今仍在九点前售罄。\n\n马洛说,这家连锁企业想使用更便宜的原料,而她不愿为了快速赚钱而丢掉几十年积累的好口碑。她表示,一家人宁愿保持小规模,守住自己的名字。街上的其他店主称赞她的决定很勇敢。这家连锁企业三年内已收购了十一家独立面包店,它表示仍然对这一地区感兴趣。目前,顾客仍然从五点四十五分起就在店外排队。"
+    },
+    "cards": {
+      "turned": {
+        "kind": "word",
+        "language": "zh-Hans",
+        "headword": "turn down",
+        "partOfSpeech": "phrasal verb",
+        "ipaUk": "ˌtɜːn ˈdaʊn",
+        "ipaUs": "ˌtɝːn ˈdaʊn",
+        "meaning": "to refuse an offer, request or proposal",
+        "notes": [
+          "Don't confuse it with \"turn down\" meaning to make a machine quieter or less hot. Here, the offer is what is refused."
+        ],
+        "examples": [
+          "He turned down the invitation because he had to work.",
+          "The bank turned her loan application down."
+        ],
+        "combinations": [
+          "turn down an offer",
+          "turn down a request",
+          "turn down a job",
+          "turn down an invitation"
+        ],
+        "unitIndices": [
+          7,
+          10
+        ],
+        "otherMeanings": [
+          {
+            "meaning": "to reduce the sound, heat or power of a machine",
+            "translation": "调低(音量、温度等)"
+          },
+          {
+            "meaning": "to fold something down",
+            "translation": "向下折"
+          }
+        ],
+        "translation": "拒绝;回绝",
+        "sentenceTranslation": "经过一次简短的会面后,露丝·马洛拒绝了这个收购提议。"
+      }
+    }
+  },
+  "store-sources": {
+    "summary": null,
+    "cards": {
+      "elephant": {
+        "kind": "word",
+        "language": "zh-Hans",
+        "headword": "the elephant in the room",
+        "partOfSpeech": "idiom",
+        "ipaUk": "ði ˌelɪfənt ɪn ðə ˈruːm",
+        "ipaUs": "ði ˌelɪfənt ɪn ðə ˈruːm",
+        "meaning": "an obvious big problem or issue that everyone knows about but nobody wants to talk about",
+        "notes": [
+          "The image is of a huge elephant standing in a small room that everyone pretends not to see.",
+          "Here the idiom is not about a real animal; it explains why the cost was the one item left off the discussion."
+        ],
+        "examples": [
+          "Money was the elephant in the room during our family dinner.",
+          "Nobody mentioned his mistake, but it was the elephant in the room."
+        ],
+        "combinations": [
+          "address the elephant in the room",
+          "ignore the elephant in the room"
+        ],
+        "unitIndices": [
+          23,
+          24,
+          25,
+          26,
+          27
+        ],
+        "otherMeanings": [
+          {
+            "meaning": "a very large grey animal with a long trunk and big ears",
+            "translation": "大象"
+          }
+        ],
+        "translation": "人人心知肚明却避而不谈的问题",
+        "sentenceTranslation": "项目成本就是那个人人心知肚明却避而不谈的问题。"
+      },
+      "A family bakery has refused a generous offer from a national chain that wanted to buy it. Its owner, Ruth Marlow, said no because the chain planned to use cheaper ingredients, and she would rather keep the bakery small than lose the trust it has built over four decades. Customers and other shop owners on the street welcomed the decision.": {
+        "kind": "sentence",
+        "language": "zh-Hans",
+        "translation": "一家家族经营的面包店拒绝了一家全国连锁企业开出的优厚收购条件。店主露丝·马洛表示,之所以拒绝,是因为这家连锁企业打算改用更便宜的原料,而她宁愿让面包店保持小规模,也不愿失去它四十年来积累的信任。街上的顾客和其他店主都对这一决定表示欢迎。",
+        "plainEnglish": "",
+        "keyExpressions": [
+          {
+            "expression": "would rather keep the bakery small than lose the trust",
+            "indices": [
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43
+            ],
+            "meaning": "would prefer to stay small instead of losing people's trust",
+            "translation": "宁愿保持小规模,也不愿失去信任"
+          },
+          {
+            "expression": "generous offer",
+            "indices": [
+              7,
+              8
+            ],
+            "meaning": "an offer of a lot of money or good terms, more than expected",
+            "translation": "优厚的收购条件(指出价很高)"
+          }
+        ]
+      }
+    }
+  }
+}

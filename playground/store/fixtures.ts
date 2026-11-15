@@ -1,33 +1,25 @@
 /**
  * Fixed cards for the Chrome Web Store screenshots. They follow the original article in shots.html, so
- * the pictures match what the extension would show there. Written by hand, not from a live model.
+ * the pictures match what the extension would show there.
+ *
+ * The Spanish and Chinese text is not written by hand. It comes from the files in ./live, which hold
+ * answers exactly as the model returned them at level B2. To refresh them, see store/README.md. The
+ * Arabic text is written by hand.
  */
 import type { DictionaryCard, SavedItem, Segment, Summary, TranslationCard } from '@/lib/types';
+import esLive from './live/es-B2.json';
+import zhLive from './live/zh-Hans-B2.json';
+
+// The lookup code validated these answers before the evaluation script saved them.
+const wordCard = (card: unknown) => card as DictionaryCard;
+const sentenceCard = (card: unknown) => card as TranslationCard;
 
 export const ARTICLE = {
   title: 'The bakery that turned the buyout down',
   url: 'https://northbridge-review.example/business/marlows-bakery',
 };
 
-export const turnDown: DictionaryCard = {
-  kind: 'word',
-  language: 'ar',
-  headword: 'turn down',
-  partOfSpeech: 'phrasal verb',
-  ipaUk: 'ˌtɜːn ˈdaʊn',
-  ipaUs: 'ˌtɝːn ˈdaʊn',
-  unitIndices: [9, 12],
-  meaning: 'to refuse an offer, request or invitation',
-  translation: 'رفض',
-  notes: ['The object can go between the two parts or after them: "turned the offer down" or "turned down the offer". A pronoun must go between: "turned it down".'],
-  sentenceTranslation: 'رفضت روث مارلو العرض بعد اجتماع قصير.',
-  examples: ['She turned down the job because the hours were too long.', 'I asked for a day off, but my manager turned me down.'],
-  combinations: ['turn down an offer', 'turn down a request', 'turn down an invitation'],
-  otherMeanings: [
-    { meaning: 'to reduce the sound, heat or power of a machine', translation: 'خفّض' },
-    { meaning: 'to fold something downwards', translation: 'ثنى' },
-  ],
-};
+export const turnDown = wordCard(esLive['store-bakery'].cards.turned);
 
 export const turnDownSentence = 'After a short meeting, Ruth Marlow turned the offer down.';
 export const turnDownSegments: Segment[] = [
@@ -55,12 +47,14 @@ export const cornersTranslation: TranslationCard = {
   ],
 };
 
+/** The same paragraph as the first one in scripts/store/sources.html, where the model translated it. */
+const SUMMARY_ENGLISH =
+  'A family bakery has refused a generous offer from a national chain that wanted to buy it. Its owner, Ruth Marlow, said no because the chain planned to use cheaper ingredients, and she would rather keep the bakery small than lose the trust it has built over four decades. Customers and other shop owners on the street welcomed the decision.';
+
 export const summary: Summary = {
-  language: 'ar',
-  english:
-    'A family bakery has refused a generous offer from a national chain that wanted to buy it. Its owner, Ruth Marlow, said no because the chain planned to use cheaper ingredients, and she would rather keep the bakery small than lose the trust it has built over four decades. Customers and other shop owners on the street welcomed the decision.',
-  translation:
-    'رفض مخبز عائلي عرضًا سخيًّا من سلسلة متاجر وطنية أرادت شراءه. فقد رفضت مالكته روث مارلو العرض لأن السلسلة كانت تنوي استخدام مكوّنات أرخص، وفضّلت أن يبقى المخبز صغيرًا على أن يخسر الثقة التي بناها على مدى أربعة عقود. ورحّب الزبائن وأصحاب المتاجر الأخرى في الشارع بقرارها.',
+  language: 'zh-Hans',
+  english: SUMMARY_ENGLISH,
+  translation: sentenceCard(zhLive['store-sources'].cards[SUMMARY_ENGLISH]).translation ?? '',
 };
 
 const DAY = 86_400_000;
@@ -87,39 +81,9 @@ const cutCorners: DictionaryCard = {
   otherMeanings: [],
 };
 
-const elephant: DictionaryCard = {
-  kind: 'word',
-  language: 'ar',
-  headword: 'the elephant in the room',
-  partOfSpeech: 'idiom',
-  ipaUk: 'ði ˈelɪfənt ɪn ðə ˈruːm',
-  ipaUs: 'ði ˈeləfənt ɪn ðə ˈruːm',
-  unitIndices: [4, 5, 6, 7, 8],
-  meaning: 'an obvious problem that everyone knows about but nobody wants to talk about',
-  translation: 'المشكلة الواضحة التي يتجنّب الجميع الحديث عنها',
-  notes: ['The image is of a huge animal standing in a small room: impossible to miss, yet everyone acts as if it is not there.'],
-  sentenceTranslation: 'كانت كلفة المشروع المشكلةَ التي يعرفها الجميع ويتجنّب الحديث عنها.',
-  examples: ['Nobody mentioned the budget cuts, the elephant in the room.', "Let's address the elephant in the room: we are behind schedule."],
-  combinations: ['address the elephant in the room', 'ignore the elephant in the room'],
-  otherMeanings: [],
-};
+const elephant = wordCard(zhLive['store-sources'].cards.elephant);
 
-const meticulous: DictionaryCard = {
-  kind: 'word',
-  language: 'ar',
-  headword: 'meticulous',
-  partOfSpeech: 'adjective',
-  ipaUk: 'məˈtɪkjələs',
-  ipaUs: 'məˈtɪkjələs',
-  unitIndices: [7],
-  meaning: 'very careful about every small detail',
-  translation: 'دقيق جدًّا ومتأنٍّ في التفاصيل',
-  notes: [],
-  sentenceTranslation: 'كانت سجلّاتها دقيقةً في أدقّ التفاصيل.',
-  examples: ['He kept meticulous notes of every meeting.', 'The repair took weeks of meticulous work.'],
-  combinations: ['meticulous attention to detail', 'meticulous records', 'meticulous planning'],
-  otherMeanings: [],
-};
+const meticulous = wordCard(esLive['store-sources'].cards.meticulous);
 
 const tradeOffTranslation: TranslationCard = {
   kind: 'sentence',

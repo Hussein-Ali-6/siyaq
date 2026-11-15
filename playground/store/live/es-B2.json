@@ -1,0 +1,76 @@
+{
+  "store-bakery": {
+    "summary": null,
+    "cards": {
+      "turned": {
+        "kind": "word",
+        "language": "es",
+        "headword": "turn down",
+        "partOfSpeech": "phrasal verb",
+        "ipaUk": "ˌtɜːn ˈdaʊn",
+        "ipaUs": "ˌtɝːn ˈdaʊn",
+        "meaning": "to refuse an offer, request or proposal",
+        "notes": [],
+        "examples": [
+          "She turned down the job because the salary was too low.",
+          "They turned our request down without any explanation."
+        ],
+        "combinations": [
+          "turn down an offer",
+          "turn down a request",
+          "turn down an invitation",
+          "turn someone down"
+        ],
+        "unitIndices": [
+          7,
+          10
+        ],
+        "otherMeanings": [
+          {
+            "meaning": "to reduce the sound, heat or power of a machine",
+            "translation": "bajar (el volumen, la calefacción, etc.)"
+          },
+          {
+            "meaning": "to fold something down, such as a bed cover or a collar",
+            "translation": "doblar hacia abajo; abrir (la cama)"
+          }
+        ],
+        "translation": "rechazar",
+        "sentenceTranslation": "Tras una breve reunión, Ruth Marlow rechazó la oferta."
+      }
+    }
+  },
+  "store-sources": {
+    "summary": null,
+    "cards": {
+      "meticulous": {
+        "kind": "word",
+        "language": "es",
+        "headword": "meticulous",
+        "partOfSpeech": "adjective",
+        "ipaUk": "məˈtɪkjələs",
+        "ipaUs": "məˈtɪkjələs",
+        "meaning": "very careful and exact, paying great attention to every small detail",
+        "notes": [
+          "Positive in most contexts, but it can suggest someone is very fussy about details."
+        ],
+        "examples": [
+          "She kept meticulous notes during every experiment.",
+          "The chef is meticulous about how each dish looks on the plate."
+        ],
+        "combinations": [
+          "meticulous attention to detail",
+          "meticulous planning",
+          "meticulous records",
+          "meticulously clean"
+        ],
+        "unitIndices": [
+          13
+        ],
+        "otherMeanings": [],
+        "translation": "meticuloso, minucioso",
+        "sentenceTranslation": "Sus registros eran meticulosos hasta el último recibo."
+      }
+    }
+  }
+}
