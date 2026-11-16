@@ -11,15 +11,14 @@ Everything needed to publish Siyaq on the Chrome Web Store, ready to paste or up
 | `images/promo-small.png` | **Store listing**: small promo tile, 440×280 |
 | `images/store-icon.png` | **Store listing**: store icon, 128×128 with transparent padding |
 | [privacy-practices.md](privacy-practices.md) | **Privacy**: single purpose, permission reasons, remote code, data usage |
-| [privacy-policy.md](privacy-policy.md) | Host it publicly, then paste its address in **Privacy** |
+| [privacy-policy.md](privacy-policy.md) | **Privacy**: paste the file's GitHub address, once the repo is public |
 
 ## Before submitting
 
-1. Decide on **Sign in with ChatGPT**. OpenAI's direct sign-in is for free, open-source apps, and this repo
-   has no license yet. Either publish the repo with an open-source license, or remove ChatGPT from the
-   store version. If you remove it, follow the notes in `listing.md` and `privacy-practices.md`, drop
-   `tabs` from `optional_permissions` in `wxt.config.ts`, and recapture `screenshot-5-settings.png`.
-2. Put your contact email at the end of `privacy-policy.md` and publish it (see `privacy-practices.md`).
+1. Make the GitHub repo public. The store version keeps **Sign in with ChatGPT**, and OpenAI's direct
+   sign-in is for free, open-source apps. The code is under the MIT license (`LICENSE`), but it only
+   counts as open source once people can read it. A public repo also gives the privacy policy its address.
+2. Push `main`, so the privacy policy's GitHub page shows the current text (see `privacy-practices.md`).
 3. Raise `version` in `package.json` for every new upload, then run `pnpm zip`.
 
 ## Images

@@ -80,4 +80,5 @@ If this policy changes, the new version will be published at this address with a
 
 ## Contact
 
-[Your contact email]
+For questions about this policy or about Siyaq, open an issue at
+https://github.com/Hussein-Ali-6/siyaq/issues

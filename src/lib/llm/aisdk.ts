@@ -37,7 +37,7 @@ function languageModel(provider: AiSdkProvider, o: AiSdkClientOptions): Language
     case 'google':
       return createGoogleGenerativeAI(common)(o.model);
     case 'openrouter':
-      return createOpenRouter({ ...common, appName: 'Siyaq', appUrl: 'https://github.com/siyaq' } as Parameters<typeof createOpenRouter>[0])(o.model);
+      return createOpenRouter({ ...common, appName: 'Siyaq', appUrl: 'https://github.com/Hussein-Ali-6/siyaq' } as Parameters<typeof createOpenRouter>[0])(o.model);
   }
 }
 

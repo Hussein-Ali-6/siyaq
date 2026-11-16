@@ -2,6 +2,7 @@
   "name": "siyaq",
   "version": "0.2.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "description": "Understand English words and sentences in context, with translation into your language, powered by the AI model you choose.",
   "scripts": {

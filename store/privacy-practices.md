@@ -1,7 +1,6 @@
 # Privacy practices
 
 Answers for the Developer Dashboard's **Privacy** tab. Each block is ready to paste into its field.
-Parts marked **(ChatGPT)** apply only if the store version keeps Sign in with ChatGPT; delete them otherwise.
 
 ## Single purpose
 
@@ -36,7 +35,7 @@ https://api.anthropic.com/*: the default AI provider. The service worker sends t
 Optional hosts (https://api.openai.com/*, https://generativelanguage.googleapis.com/*, https://openrouter.ai/*, https://auth.openai.com/*): requested at runtime only when the reader turns on OpenAI, Google Gemini, OpenRouter or Sign in with ChatGPT, so each reader grants access only to the provider they use.
 ```
 
-### tabs (optional) **(ChatGPT)**
+### tabs (optional)
 
 ```
 Requested only when the reader chooses Sign in with ChatGPT. OpenAI's sign-in ends by redirecting the sign-in tab to a loopback address (http://127.0.0.1:<port>/auth/callback), which an extension cannot listen on. Siyaq reads the address of that one sign-in tab to finish the sign-in and then closes it, ignoring every other tab. If the reader declines, they can paste the address into the settings page instead.
@@ -56,7 +55,7 @@ Tick these data types:
 
 | Data type | Tick? | Why |
 |---|---|---|
-| Personally identifiable information | **(ChatGPT)** yes, otherwise no | After Sign in with ChatGPT, OpenAI returns the account's email, which is stored locally to show which account is connected. It is not sent anywhere. |
+| Personally identifiable information | **yes** | After Sign in with ChatGPT, OpenAI returns the account's email, which is stored locally to show which account is connected. It is not sent anywhere. |
 | Health information | no | |
 | Financial and payment information | no | |
 | Authentication information | **yes** | The reader's API keys and ChatGPT sign-in tokens are stored locally and sent only to their own provider. |
@@ -77,9 +76,9 @@ an approved use.
 
 ## Privacy policy URL
 
-The policy is `store/privacy-policy.md`. It has to be on a public web page. Fill in the contact line
-first, then use one of these:
+The policy is `store/privacy-policy.md`. It has to be on a public web page, so the GitHub repo must be
+public. Push `main`, then paste the file's GitHub address:
 
-- If the GitHub repo is public: the file's GitHub address,
-  `https://github.com/Hussein-Ali-6/siyaq/blob/main/store/privacy-policy.md`.
-- If the repo stays private: paste it into a public GitHub Gist, or a GitHub Pages site, and use that address.
+```
+https://github.com/Hussein-Ali-6/siyaq/blob/main/store/privacy-policy.md
+```

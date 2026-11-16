@@ -153,3 +153,7 @@ translation language and your English level to the provider you chose, with your
 sign-in. Pressing a speaker sends that word or sentence to Google's voice service, and the YouGlish
 and Oxford links send the word to those sites, only when you click them. The console only ever shows
 event names, error codes, status codes and counts, never page text or answers.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

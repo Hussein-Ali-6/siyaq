@@ -3,9 +3,6 @@
 Paste these into the Chrome Web Store Developer Dashboard, **Store listing** tab. The name and the
 short summary come from the manifest (`wxt.config.ts`), so they are shown here only for reference.
 
-If the store version ships without Sign in with ChatGPT, delete the bullet that starts "your ChatGPT
-plan" in the English text and "اشتراكك في ChatGPT" in the Arabic text.
-
 ## Name (from the manifest, max 75 characters)
 
 ```
