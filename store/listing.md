@@ -18,8 +18,10 @@ Understand English words and sentences in context, with translation into your la
 ## Category and language
 
 - Category: **Education**
-- Language: **English**. Add **Arabic** as a second listing language with the Arabic text below. It
-  carries the same message for people who browse the store in Arabic. Siyaq's own labels are in English.
+- Language: **English**. The dashboard offers one description field, because a second listing language
+  needs the package itself to be localized (a `_locales` folder with the name and summary in each
+  language), and Siyaq's is not. Paste the English text. The Arabic text below is kept for an Arabic
+  listing later.
 
 ## Description (English)
 

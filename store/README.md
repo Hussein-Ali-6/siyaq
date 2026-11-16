@@ -12,6 +12,7 @@ Everything needed to publish Siyaq on the Chrome Web Store, ready to paste or up
 | `images/store-icon.png` | **Store listing**: store icon, 128×128 with transparent padding |
 | [privacy-practices.md](privacy-practices.md) | **Privacy**: single purpose, permission reasons, remote code, data usage |
 | [privacy-policy.md](privacy-policy.md) | **Privacy**: paste the file's GitHub address, once the repo is public |
+| "Test instructions" below | **Test instructions**: additional instructions (optional) |
 
 ## Before submitting
 
@@ -20,6 +21,21 @@ Everything needed to publish Siyaq on the Chrome Web Store, ready to paste or up
    counts as open source once people can read it. A public repo also gives the privacy policy its address.
 2. Push `main`, so the privacy policy's GitHub page shows the current text (see `privacy-practices.md`).
 3. Raise `version` in `package.json` for every new upload, then run `pnpm zip`.
+
+## Test instructions
+
+Optional, but a reviewer cannot see a card without an API key, so say how to get to one:
+
+```
+Siyaq has no account and no paid tier. It works with the tester's own API key from an AI provider (Anthropic, OpenAI, Google Gemini or OpenRouter).
+
+1. Installing opens the settings page. Under "AI provider", open a provider, paste an API key and click Connect.
+2. Open any English article, for example a Wikipedia page.
+3. Select a word or a sentence. A small round button appears next to the selection. Click it.
+4. A card opens that explains the selection in its context and translates it into the language chosen in settings.
+
+The toolbar popup shows a summary of the article. "My words" on the settings page lists saved words.
+```
 
 ## Images
 
